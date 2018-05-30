@@ -1,0 +1,212 @@
+ map_feature: 
+	 name: _
+	 id: exit_sign
+	 position: [5.49021454112, 6.19862932062]
+ map_feature: 
+	 name: _
+	 id: exit_sign
+	 position: [16.3378158522, 6.68566448153]
+ map_feature: 
+	 name: _
+	 id: exit_sign
+	 position: [17.7989213349, 9.29794398093]
+ map_feature: 
+	 name: _
+	 id: exit_sign
+	 position: [16.4263676996, 27.9823837902]
+ map_feature: 
+	 name: _
+	 id: exit_sign
+	 position: [13.858364124, 34.9779797378]
+ map_feature: 
+	 name: _
+	 id: exit_sign
+	 position: [7.03987187128, 34.3581168057]
+ map_feature: 
+	 name: _
+	 id: exit_sign
+	 position: [6.68566448153, 25.6357598331]
+ map_feature: 
+	 name: _
+	 id: exit_sign
+	 position: [5.4459386174, 23.2005840286]
+ map_feature: 
+	 name: Room 401
+	 id: aruco 0
+	 position: [16.6477473182, 4.38331644815]
+ map_feature: 
+	 name: Room 402
+	 id: aruco 1
+	 position: [15.4522973778, 4.42759237187]
+ map_feature: 
+	 name: Room 403
+	 id: aruco 2
+	 position: [12.6629141836, 5.667318236]
+ map_feature: 
+	 name: Room 404
+	 id: aruco 3
+	 position: [9.78497914184, 5.667318236]
+ map_feature: 
+	 name: Room 405
+	 id: aruco 4
+	 position: [6.95132002384, 5.667318236]
+ map_feature: 
+	 name: Room 406
+	 id: aruco 5
+	 position: [6.99559594756, 5.667318236]
+ map_feature: 
+	 name: Room 407
+	 id: aruco 6
+	 position: [5.04745530393, 7.08414779499]
+ map_feature: 
+	 name: Room 408
+	 id: aruco 7
+	 position: [5.04745530393, 10.6704976162]
+ map_feature: 
+	 name: Room 409
+	 id: aruco 8
+	 position: [5.09173122765, 13.6369845054]
+ map_feature: 
+	 name: Room 410
+	 id: aruco 9
+	 position: [5.13600715137, 16.6477473182]
+ map_feature: 
+	 name: Room 411
+	 id: aruco 10
+	 position: [5.09173122765, 19.3485786651]
+ map_feature: 
+	 name: Room 412
+	 id: aruco 11
+	 position: [6.72994040524, 28.7350744934]
+ map_feature: 
+	 name: Room 413
+	 id: aruco 12
+	 position: [6.72994040524, 32.7641835518]
+ map_feature: 
+	 name: Room 414
+	 id: aruco 13
+	 position: [6.68566448153, 35.3764630513]
+ map_feature: 
+	 name: Room 415
+	 id: aruco 14
+	 position: [8.01394219309, 35.5535667461]
+ map_feature: 
+	 name: Room 416
+	 id: aruco 15
+	 position: [10.6704976162, 35.5092908224]
+ map_feature: 
+	 name: Room 417
+	 id: aruco 16
+	 position: [13.5927085816, 35.5092908224]
+ map_feature: 
+	 name: Room 418
+	 id: aruco 17
+	 position: [15.0095381406, 35.420738975]
+ map_feature: 
+	 name: Room 419
+	 id: aruco 18
+	 position: [14.3011233611, 30.373283671]
+ map_feature: 
+	 name: Room 431
+	 id: aruco 26
+	 position: [17.8431972586, 26.6983820024]
+ map_feature: 
+	 name: Mechanical instalation room
+	 id: aruco 38
+	 position: [17.7989213349, 24.3517580453]
+ map_feature: 
+	 name: Women Restroom
+	 id: aruco 37
+	 position: [19.1714749702, 20.3669249106]
+ map_feature: 
+	 name: Men Restroom
+	 id: aruco 36
+	 position: [19.1714749702, 19.4371305125]
+ map_feature: 
+	 name: Electrical instalation room
+	 id: aruco 39
+	 position: [17.7989213349, 15.4522973778]
+ map_feature: 
+	 name: fire hose
+	 id: aruco 35
+	 position: [17.7989213349, 12.8400178784]
+ map_feature: 
+	 name: stairs door
+	 id: aruco 34
+	 position: [17.8431972586, 9.74070321812]
+ map_feature: 
+	 name: Fourth Floor Plan
+	 id: aruco 40
+	 position: [16.4706436234, 7.43835518474]
+ map_feature: 
+	 name: Room 429
+	 id: aruco 30
+	 position: [12.2644308701, 7.12842371871]
+ map_feature: 
+	 name: Room 430
+	 id: aruco 31
+	 position: [7.74828665077, 7.08414779499]
+ map_feature: 
+	 name: Room 427
+	 id: aruco 32
+	 position: [6.37573301549, 13.3713289631]
+ map_feature: 
+	 name: Room 426
+	 id: aruco 33
+	 position: [6.33145709178, 20.5440286055]
+ map_feature: 
+	 name: Cubicle 423A
+	 id: aruco 24
+	 position: [7.92539034565, 25.1930005959]
+ map_feature: 
+	 name: Cubicle 422
+	 id: aruco 23
+	 position: [8.76663289631, 26.7426579261]
+ map_feature: 
+	 name: Cubicle 421A
+	 id: aruco 21
+	 position: [7.92539034565, 30.063352205]
+ map_feature: 
+	 name: Cubicle 421B
+	 id: aruco 22
+	 position: [7.92539034565, 33.4725983313]
+ map_feature: 
+	 name: Cubicle 420B
+	 id: aruco 20
+	 position: [13.1499493445, 33.5168742551]
+ map_feature: 
+	 name: Cubicle 420A
+	 id: aruco 19
+	 position: [13.1499493445, 30.0190762813]
+ map_feature: 
+	 name: Room 424
+	 id: aruco 27
+	 position: [16.5591954708, 22.7135488677]
+ map_feature: 
+	 name: Room 425
+	 id: aruco 28
+	 position: [16.4706436234, 19.7913379023]
+ map_feature: 
+	 name: Room 428
+	 id: aruco 29
+	 position: [16.4706436234, 14.6553307509]
+ map_feature: 
+	 name: stairs door
+	 id: aruco 34
+	 position: [5.04745530393, 23.8647228844]
+ map_feature: 
+	 name: stairs door
+	 id: aruco 34
+	 position: [5.13600715137, 25.2372765197]
+ map_feature: 
+	 name: fire hose
+	 id: aruco 35
+	 position: [5.13600715137, 24.5731376639]
+ map_feature: 
+	 name: Cubicle 423B
+	 id: aruco 25
+	 position: [10.1834624553, 24.9716209774]
+ map_feature: 
+	 name: 'elevator'
+	 id: elevator
+	 position: [18.6401638856, 6.72994040524]

@@ -1,0 +1,109 @@
+
+map_feature:
+	name: arucoMarker
+	id: 10
+	position: [42.496, 6.9388]
+	orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+	normal: [-1, 0]
+map_feature:
+	name: arucoMarker
+	id: 11
+	position: [37.7152, 7.7356]
+	orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+	normal: [0, -1]
+map_feature:
+	name: arucoMarker
+	id: 12
+	position: [34.4284, 7.7356]
+	orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+	normal: [0, -1]
+map_feature:
+	name: arucoMarker
+	id: 13
+	position: [32.1044, 5.8432]
+	orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+	normal: [0, 1]
+map_feature:
+	name: arucoMarker
+	id: 28
+	position: [28.1204, 5.7104]
+	orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+	normal: [-1, 0]
+map_feature:
+	name: arucoMarker
+	id: 14
+	position: [19.92, 5.6108]
+	orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+	normal: [1, 0]
+map_feature:
+	name: arucoMarker
+	id: 15
+	position: [10.4248, 8.0012]
+	orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+	normal: [1, 0]
+map_feature:
+	name: arucoMarker
+	id: 16
+	position: [10.4248, 12.6492]
+	orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+	normal: [1, 0]
+map_feature:
+	name: arucoMarker
+	id: 18
+	position: [16.6996, 16.9984]
+	orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+	normal: [0, -1]
+map_feature:
+	name: arucoMarker
+	id: 19
+	position: [19.7208, 15.272]
+	orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+	normal: [0, 1]
+map_feature:
+	name: arucoMarker
+	id: 21
+	position: [22.8416, 18.094]
+	orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+	normal: [1, 0]
+map_feature:
+	name: arucoMarker
+	id: 20
+	position: [25.8296, 13.0144]
+	orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+	normal: [0, 1]
+map_feature:
+	name: arucoMarker
+	id: 22
+	position: [26.4936, 17.098]
+	orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+	normal: [0, -1]
+map_feature:
+	name: arucoMarker
+	id: 23
+	position: [31.9052, 17.0316]
+	orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+	normal: [0, -1]
+map_feature:
+	name: arucoMarker
+	id: 24
+	position: [37.4828, 15.1724]
+	orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+	normal: [0, 1]
+map_feature:
+	name: arucoMarker
+	id: 25
+	position: [40.7032, 14.94]
+	orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+	normal: [1, 0]
+map_feature:
+	name: arucoMarker
+	id: 26
+	position: [40.7364, 10.9892]
+	orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+	normal: [1, 0]
+map_feature:
+	name: arucoMarker
+	id: 27
+	position: [39.9064, 5.976]
+	orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+	normal: [0, 1]

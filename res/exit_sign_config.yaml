@@ -1,0 +1,30 @@
+%YAML:1.0
+
+# ATTENTION: DO NOT USE TAB CHARACTERS WHEN EDITING THIS FILE (you can replace tabs with spaces in you editor settings)
+
+# Classifiers location
+ClassifiersFolder: "./res/"    #folder containing the classifiers (used for desktop only)
+CascadeFile: "exit_sign_cascade.xml"     # cascade classifier filename
+SVMFile: "exit_sign_model.svm"       # SVM model 
+
+# Cascade search window parameters. It can be changed, but it is a good idea to keep the same aspect ratio (w/h = 1.5)
+minWinSize:
+    width: 24
+    height: 18
+CascadeScaleFactor: 1.2    # scale factor for multiscale detection 
+
+maxWinSizeFactor: 10.       #specify largest search window as a multiple of minWinSize
+
+# HOG
+HOG_winSize:               # DO NOT CHANGE: this parameter should be changed only if the SVM is trained with a different window size 
+    width: 36
+    height: 24
+
+SVMThreshold: .5          # sets the SVM confidence threshold   
+
+# Preprocessing
+CroppingFactors:           # specify which section of the image to process. Cropping origin is (0,0) i.e. top left corner
+    width: 1.0
+    height: 0.66
+
+ScaleFactor: 1.          # specify rescaling factor for cropped frames (helps with detection of small objects)
