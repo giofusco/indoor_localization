@@ -29,13 +29,16 @@ class AnnotatedMap:
         self.map_landmarks_dict = self.read_map_landmarks(map_landmarks_file)
 
     def read_map(self, mapfile, walkfile):
-        layermap = cv2.imread(mapfile)
-        walkmap = cv2.imread(walkfile)
+        layermap = cv2.imread(mapfile, cv2.IMREAD_GRAYSCALE)
+        walkmap = cv2.imread(walkfile, cv2.IMREAD_GRAYSCALE)
         mapsize = layermap.shape
+        layermap = cv2.threshold(layermap, 128, 255, cv2.THRESH_BINARY)[1]
+        walkmap = cv2.threshold(walkmap, 128, 255, cv2.THRESH_BINARY)[1]
         self.floormap['Walls'] = layermap
         self.floormap['Walkable'] = walkmap
         self.mapsize_uv = mapsize
         self.mapsize_xy = (mapsize[0] / self.scale, mapsize[1] / self.scale)
+        cv2.imshow("MAP", layermap)
         print("MAP LOADED")
 
     def get_walls_image(self):
@@ -49,8 +52,8 @@ class AnnotatedMap:
 
     def xy2uv_vectorized(self, pts):
         # Converts a list of motion coordinates to coordinates in the EnvironmentMap (an image)
-        u = math.trunc(self.scale * pts[:, 0])
-        v = math.trunc(self.mapsize_uv[0] - self.scale * pts[:, 1])
+        u = np.trunc(self.scale * pts[:, 0]).astype(np.int)
+        v = np.trunc(self.mapsize_uv[0] - self.scale * pts[:, 1]).astype(np.int)
         return np.array([u, v]).T
 
     def uv2xy(self, pt):

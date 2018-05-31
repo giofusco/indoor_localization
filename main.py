@@ -6,6 +6,7 @@ import components_names
 from particlefilter.odometry import Odometry
 from navigation_system import NavigationSystem
 from detectors.marker_detector import MarkerDetector
+from plotting.visualizer import Visualizer
 # from EnvironmentMap.MapAnnotation import MapAnnotation
 # from sign_detector import SignDetector
 
@@ -33,9 +34,11 @@ def main():
     data_parser = DataParser(data_folder)
 
     annotated_map = AnnotatedMap(map_image, walkable_image, map_featsfile)
+    visualizer = Visualizer(annotated_map.get_walls_image())
 
     marker_detector = MarkerDetector(components_names.MARKER_DETECTOR, min_consecutive_frames=1)
-    nav_system = NavigationSystem(data_source=data_parser, annotated_map=annotated_map, marker_detector=marker_detector)
+    nav_system = NavigationSystem(data_source=data_parser, annotated_map=annotated_map,
+                                  marker_detector=marker_detector, visualizer=visualizer )
 
     odometry = Odometry(components_names.ODOMETRY, annotated_map)
     nav_system.attach(components_names.ODOMETRY, odometry)
@@ -44,7 +47,7 @@ def main():
     # system initialization - scan for a marker to find the initial user location
     if AUTO_DETECT_STARTING_POINT:
         nav_system.detect_starting_position()
-    nav_system.initialize(1000)
+    nav_system.initialize(5000)
     while True:
         try:
             nav_system.step()

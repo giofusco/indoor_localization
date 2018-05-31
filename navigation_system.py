@@ -5,7 +5,7 @@ import math
 import cv2
 import glob
 import itertools
-from plotting.visualizer import Visualizer
+from plotting import visualizer as vis
 from particlefilter.particle_filter import ParticleFilter
 
 
@@ -13,7 +13,7 @@ from particlefilter.particle_filter import ParticleFilter
 
 class NavigationSystem:
 
-    def __init__(self, annotated_map, data_source, marker_detector):
+    def __init__(self, annotated_map, data_source, marker_detector, visualizer=None):
         self.data_source = data_source
         self.current_data = None
         self.observers = {}
@@ -30,6 +30,8 @@ class NavigationSystem:
         self.markers_trace = []
         self.marker_detector = marker_detector
         self.particle_filter = None
+        self.visualizer = visualizer
+
 
     def set_data_source(self, data_source):
         self.data_source = data_source
@@ -38,7 +40,8 @@ class NavigationSystem:
         self.observers[name] = observer
 
     def initialize(self, num_particles=1000):
-        self.particle_filter = ParticleFilter(self.annotated_map, num_particles=num_particles)
+        self.particle_filter = ParticleFilter(self.annotated_map, num_particles=num_particles,
+                                              visualizer=self.visualizer)
         self.detect_starting_position()
         measured_pos, measured_yaw = self.observers[cnames.ODOMETRY].get_measurements()
         # initialize particles
@@ -61,11 +64,11 @@ class NavigationSystem:
             measured_pos_delta, measured_yaw_delta = self.observers[cnames.ODOMETRY].get_measurements_deltas()
             observed_pos, observed_yaw = self.observers[cnames.MARKER_DETECTOR].get_observations(annotated_map=self.annotated_map)
             measured_pos, measured_yaw = self.observers[cnames.ODOMETRY].get_measurements()
-            Visualizer.show_frame(self.current_data[dconst.IMAGE])
+            self.visualizer.show_frame(self.current_data[dconst.IMAGE])
 
-            Visualizer.plot_measured_position_on_map(measured_pos, self.annotated_map)
-            if observed_pos is not None:
-                Visualizer.plot_measured_position_on_map(observed_pos, self.annotated_map, color=(255,0,0))
+            # self.visualizer.plot_measured_position_on_map(measured_pos, self.annotated_map)
+            # if observed_pos is not None:
+            #     self.visualizer.plot_measured_position_on_map(observed_pos, self.annotated_map, color=(255,0,0))
 
 
             self.particle_filter.step(measurements=[measured_pos_delta, measured_yaw_delta],

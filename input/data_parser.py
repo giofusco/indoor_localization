@@ -26,7 +26,7 @@ class DataParser:
             if len(line) == 0:
                 raise IOError("Could not read file:", self.vio_filename[0])
             self.initialized = True
-            # we skip the first sample, sometimes is extremely noisy do to VIO re-initialization
+            # we skip the first sample, sometimes it is extremely noisy due to VIO re-initialization
             self.read_next(False)
         else:
             raise IOError("Could not locate VIO data file ")
