@@ -45,7 +45,7 @@ class NavigationSystem:
         self.detect_starting_position()
         measured_pos, measured_yaw = self.observers[cnames.ODOMETRY].get_measurements()
         # initialize particles
-        self.particle_filter.initialize_particles_at(measured_pos, measured_yaw, 0.5, 0.1)
+        self.particle_filter.initialize_particles_at(measured_pos, measured_yaw, .1, 0.1)
 
     def detect_starting_position(self):
         self.observers[cnames.ODOMETRY].set_initial_position(self.data_source, self.marker_detector)

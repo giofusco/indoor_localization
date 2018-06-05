@@ -17,7 +17,7 @@ import cv2
 AUTO_DETECT_STARTING_POINT = 1
 STEP_PAUSE = 1
 
-data_folder = './data/70'
+data_folder = './data/98S'
 map_featsfile = './res/mapFeatures.yml'
 map_image = './res/Walls.png'
 walkable_image = './res/Walkable.png'
@@ -47,7 +47,7 @@ def main():
     # system initialization - scan for a marker to find the initial user location
     if AUTO_DETECT_STARTING_POINT:
         nav_system.detect_starting_position()
-    nav_system.initialize(5000)
+    nav_system.initialize(10000)
     while True:
         try:
             nav_system.step()

@@ -2,6 +2,8 @@ import map.annotated_map
 import cv2
 import numpy as np
 from numba import jit
+import matplotlib.pyplot as plt
+
 
 NAVIGATION_WINDOW_NAME = 'Trajectory'
 FRAME_WINDOW_NAME = 'Current Frame'
@@ -9,6 +11,7 @@ FRAME_WINDOW_NAME = 'Current Frame'
 
 class Visualizer:
     def __init__(self, map_image):
+        self.jets = plt.get_cmap('plasma')
         if len(np.shape(map_image)) == 2:
             self.draw_map = cv2.cvtColor(map_image, cv2.COLOR_GRAY2RGB)
         else:
@@ -41,32 +44,44 @@ class Visualizer:
     # @staticmethod
     def show_frame(self, image):
         cv2.imshow("input", image)
-        cv2.waitKey(1)
+        # cv2.waitKey(1)
 
     # @staticmethod
     def plot_measured_position_on_map(self, position, annotated_map, color=(0,0,255), window_name=NAVIGATION_WINDOW_NAME):
         uv = annotated_map.xy2uv(position)
         traj_image = self._plot_point(uv, color)
         cv2.imshow(window_name, traj_image)
-        cv2.waitKey(1)
+        # cv2.waitKey(1)
 
     # @staticmethod
-    @jit
+    # @jit(nopython=True)
     def plot_particles(self, annotated_map, particles):
         draw_map = self.draw_map.copy()
-        for point in particles:
-            if point[3] != -1:
-                cv2.circle(draw_map, tuple(annotated_map.xy2uv(point[0:2])), 1, (0, 255, 0))
+        score_colors = self.jets(particles[:,3])*255
+        for p in range(len(particles)):
+            cv2.circle(draw_map, tuple(annotated_map.xy2uv(particles[p][0:2])), int(5*(particles[p,3])),
+                       (score_colors[p,2], score_colors[p,1], score_colors[p,0]))
+            # if point[3] > 0.5:
+            # cv2.circle(draw_map, tuple(annotated_map.xy2uv(point[0:2])), 1, (0, 255, 0))
             # else:
             #     cv2.circle(draw_map, tuple(annotated_map.xy2uv(point[0:2])), 1, (0, 0, 255))
         cv2.imshow("part", draw_map)
-        cv2.waitKey(1)
+        # cv2.waitKey(1)
 
     # @staticmethod
     def _plot_point(self, uv, color=(0, 0, 255)):
         draw_map = self.draw_map.copy()
         draw_map = cv2.circle(draw_map, tuple(uv), 5, color, -1)
         return draw_map
+
+    def get_color_from_float(self, value):
+
+        jet = self.jets(value)
+        r = jet[0] * 255
+        g = jet[1] * 255
+        b = jet[2] * 255
+        color = (b, g, r)
+        return color
 
 
 
