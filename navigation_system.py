@@ -39,13 +39,17 @@ class NavigationSystem:
     def attach(self, name, observer):
         self.observers[name] = observer
 
-    def initialize(self, num_particles=1000):
+    def initialize(self, num_particles=1000, uniform=True):
         self.particle_filter = ParticleFilter(self.annotated_map, num_particles=num_particles,
                                               visualizer=self.visualizer)
         self.detect_starting_position()
         measured_pos, measured_yaw = self.observers[cnames.ODOMETRY].get_measurements()
         # initialize particles
-        self.particle_filter.initialize_particles_at(measured_pos, measured_yaw, .1, 0.1)
+        if not uniform:
+            self.particle_filter.initialize_particles_at(measured_pos, measured_yaw, .1, 0.1)
+        else:
+            self.particle_filter.initialize_particles_uniform(.1, .1)
+
 
     def detect_starting_position(self):
         self.observers[cnames.ODOMETRY].set_initial_position(self.data_source, self.marker_detector)

@@ -35,23 +35,30 @@ class ParticleFilter:
         self.particles = np.column_stack((sample_x, sample_y, yaws, weights))
         self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
 
+    def initialize_particles_uniform(self, position_noise_sigma=0.5, yaw_noise_sigma=0.1):
+        # initialize N random particles all over the walkable area
+        sample_x = np.random.uniform(0., self.annotated_map.mapsize_xy[1], self.num_particles)
+        sample_y = np.random.uniform(0., self.annotated_map.mapsize_xy[0], self.num_particles)
+        yaws = np.random.normal(0, yaw_noise_sigma, self.num_particles)
+        weights = np.ones(self.num_particles)
+        self.particles = np.column_stack((sample_x, sample_y, yaws, weights))
+        self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
+
     def step(self, measurements, observations):
         # print ("Particle Filter step")
         self.move_particles_by(measurements[0], measurements[1], position_noise_sigma=0.05)
-        self.score_particles(observations)
+        # self.score_particles(observations)
+        self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
         # t0 = time.time()
         self.resample_particles()
         # t1 = time.time()
         # print(t1-t0)
-        self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
 
 
     def move_particles_by(self, delta_pos, delta_yaw, position_noise_sigma=0.1):
         sample_x, sample_y = self.__get_direction_noise(delta_pos, len(self.particles), sigma_x=0.1, sigma_y=0.1)
         uv_pt1 = self.annotated_map.xy2uv_vectorized(self.particles[:, 0:2])
         uv_pt2 = self.annotated_map.xy2uv_vectorized(self.particles[:, 0:2] + np.column_stack((sample_x, sample_y)))
-
-
         self.particles = wall_hit(self.particles, uv_pt1, uv_pt2, self.walls_image)
         sample_x = sample_x[self.particles[:, 3] >= 0]
         sample_y = sample_y[self.particles[:, 3] >= 0]
@@ -59,21 +66,25 @@ class ParticleFilter:
         self.particles[:, 0] += sample_x
         self.particles[:, 1] += sample_y
 
-
     def score_particles(self, observations):
-
         if observations[0] is not None:
             d = cdist(self.particles[:, 0:2], [observations[0]], metric='euclidean')
             self.particles[self.particles[:,3]>=0,3] = (1/(1+d[self.particles[:,3]>=0])).transpose()
 
     def resample_particles(self):
-        new_particles = np.zeros(np.shape(self.particles))
-        # print(len(self.particles))
-        w = self.particles[:,3] / np.sum(self.particles[:,3])
-        idx = np.random.choice(len(w), self.num_particles, [w])
-        new_particles = self.particles[idx]
-        self.particles = new_particles
-
+        if len(self.particles) > 0:
+            new_particles = np.zeros(np.shape(self.particles))
+            # print(len(self.particles))
+            tot_score = np.sum(self.particles[:,3])
+            w = self.particles[:,3]
+            if tot_score >0:
+                w /= tot_score
+            idx = np.random.choice(len(w), self.num_particles, [w])
+            new_particles = self.particles[idx]
+            self.particles = new_particles
+            self.particles[:,3] = 1.
+        # else:
+        #     raise RuntimeError("No particles left")
 
     @staticmethod
     def __get_direction_noise(delta_pos, num_samples, sigma_x=0.1, sigma_y=0.1):
@@ -81,15 +92,16 @@ class ParticleFilter:
         x_ratio = (abs(delta_pos[0]) / tot_delta) * sigma_x
         y_ratio = (abs(delta_pos[1]) / tot_delta) * sigma_y
 
-        if abs(delta_pos[0]) < 0.01:
+        if abs(delta_pos[0]) < 0.05:
             x_ratio = 0
-        if abs(delta_pos[1]) < 0.01:
+        if abs(delta_pos[1]) < 0.05:
             y_ratio = 0
 
         sample_x = np.random.normal(delta_pos[0], x_ratio, num_samples)
         sample_y = np.random.normal(delta_pos[1], y_ratio, num_samples)
 
         return np.sign(delta_pos[0])*abs(sample_x), np.sign(delta_pos[1])*abs(sample_y)
+
 
 @jit(nopython=True)
 def wall_hit(particles, uv_pt1, uv_pt2, m):  # improved version? need to test!
