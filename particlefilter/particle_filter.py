@@ -46,7 +46,7 @@ class ParticleFilter:
 
     def step(self, measurements, observations):
         # print ("Particle Filter step")
-        self.move_particles_by(measurements[0], measurements[1], position_noise_sigma=0.05)
+        self.move_particles_by(measurements[0], measurements[1], position_noise_sigma=0.5)
         # self.score_particles(observations)
         self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
         # t0 = time.time()

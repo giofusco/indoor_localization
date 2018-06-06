@@ -81,9 +81,10 @@ class Odometry:
 
 
     def update(self, vio_data):
-        if vio_data[dconst.VIO_STATUS] == 'normal':
-            self._update_odometry(vio_data)
-            self.last_processed_timestamp = vio_data[dconst.TIMESTAMP]
+        # print("***", vio_data[dconst.VIO_STATUS])
+        # if vio_data[dconst.VIO_STATUS] == 'normal' or vio_data[dconst.VIO_STATUS] == 'limited':
+        self._update_odometry(vio_data)
+        self.last_processed_timestamp = vio_data[dconst.TIMESTAMP]
 
 #TODO: check yaw update
     def _update_odometry(self, vio_data):
