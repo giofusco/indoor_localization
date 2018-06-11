@@ -7,6 +7,8 @@ import scipy
 from scipy.misc import imread, imsave
 from math import trunc  # similar to round() but it returns an int; however, trunc(3.9) is 3, etc.
 from numba import jit
+from numba import cuda
+
 import time
 import cv2
 
@@ -69,7 +71,7 @@ def traversable2(r1, c1, r2, c2, m):  # improved version? need to test!
 
     dr = abs(r1 - r2)  # delta row
     dc = abs(c1 - c2)  # delta column
-
+    hits = 0
     span = max(dr, dc)  # if more rows than columns then loop over rows; else loop over columns
     span_float = span + 0.  # float version
     if span == 0:  # i.e., special case: (r1,c1) equals (r2,c2)
@@ -79,13 +81,45 @@ def traversable2(r1, c1, r2, c2, m):  # improved version? need to test!
     for k in range(
                     span + 1):  # k goes from 0 through span; e.g., a span of 2 implies there are 2+1=3 pixels to reach in loop
         frac = k * multiplier
-        r = trunc(r1 + frac * (r2 - r1))
-        c = trunc(c1 + frac * (c2 - c1))
-        if m[r, c] > 0:  # hit!
-            return 1  # report hit and exit function
+        # r = trunc(r1 + frac * (r2 - r1))
+        # c = trunc(c1 + frac * (c2 - c1))
+        hits += m[trunc(r1 + frac * (r2 - r1)), trunc(c1 + frac * (c2 - c1))]
 
+        # if m[r, c] > 0:  # hit!
+        #     return 1  # report hit and exit function
+    if hits > 0:
+        return 1
     return 0  # if we got to here then no hits
 
+@jit(nopython=True)
+def traversable3(r1, c1, height, width, m):  # improved version? need to test!
+    """Traversability calculation:
+    Inputs are pixel locations (r1,c1) and (r2,c2) and 2D map array.
+    Draw a line from (r1,c1) to (r2,c2) and determine whether any white (wall) pixels are hit along the way.
+    Return 1 if a wall is hit, 0 otherwise."""
+    visib = binary_map * 0
+    for r2 in range(height):
+        for c2 in range(width):
+            # r2 = r
+            # c2 = c
+            dr = abs(r1 - r2)  # delta row
+            dc = abs(c1 - c2)  # delta column
+            hits = 0
+            span = max(dr, dc)  # if more rows than columns then loop over rows; else loop over columns
+            span_float = span + 0.  # float version
+            if span == 0:  # i.e., special case: (r1,c1) equals (r2,c2)
+                multiplier = 0.
+            else:
+                multiplier = 1. / span
+            for k in range(
+                            span + 1):  # k goes from 0 through span; e.g., a span of 2 implies there are 2+1=3 pixels to reach in loop
+                frac = k * multiplier
+                hits += m[trunc(r1 + frac * (r2 - r1)), trunc(c1 + frac * (c2 - c1))]
+
+                if hits > 0:  # hit!
+                    visib[r2, c2] = 1
+                    break
+    return visib
 
 # now create visibility map
 # origin = (177,236)
@@ -94,11 +128,9 @@ visib = binary_map * 0
 h, w = np.shape(binary_map)
 
 print('starting...')
-tic = time.time()
-for r in range(h):
-    for c in range(w):
-        visib[r, c] = traversable2(origin[0], origin[1], r, c, binary_map)
 
+tic = time.time()
+visib = traversable3(origin[0], origin[1], h, w, binary_map)
 toc = time.time()
 print('elapsed time:', toc - tic)
 print('elapsed time per pixel:', (toc - tic) / (h * w))

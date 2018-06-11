@@ -32,7 +32,6 @@ class NavigationSystem:
         self.particle_filter = None
         self.visualizer = visualizer
 
-
     def set_data_source(self, data_source):
         self.data_source = data_source
 
@@ -43,13 +42,12 @@ class NavigationSystem:
         self.particle_filter = ParticleFilter(self.annotated_map, num_particles=num_particles,
                                               visualizer=self.visualizer)
         self.detect_starting_position()
-        measured_pos, measured_yaw = self.observers[cnames.ODOMETRY].get_measurements()
+        measured_pos, measured_yaw = self.observers[cnames.ODOMETRY].get_initial_measurements()
         # initialize particles
         if not uniform:
             self.particle_filter.initialize_particles_at(measured_pos, measured_yaw, .1, 0.1)
         else:
             self.particle_filter.initialize_particles_uniform(.1, .1)
-
 
     def detect_starting_position(self):
         self.observers[cnames.ODOMETRY].set_initial_position(self.data_source, self.marker_detector)
