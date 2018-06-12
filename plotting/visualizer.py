@@ -41,6 +41,16 @@ class Visualizer:
 #
 #     return image
 
+    def plot_particle_displacement(self, annotated_map, particles, destinations):
+        draw_map = self.draw_map.copy()
+        for p in range(len(particles)):
+            cv2.circle(draw_map, tuple(annotated_map.xy2uv(particles[p][0:2])), 3,
+                       (0, 255, 0))
+            cv2.circle(draw_map, tuple(annotated_map.xy2uv(destinations[p][0:2])), 5, (0, 0, 255))
+
+        cv2.imshow("DISPLACEMENT", draw_map)
+        cv2.waitKey(10)
+
     # @staticmethod
     def show_frame(self, image):
         cv2.imshow("input", image)
@@ -65,7 +75,7 @@ class Visualizer:
             # cv2.circle(draw_map, tuple(annotated_map.xy2uv(point[0:2])), 1, (0, 255, 0))
             # else:
             #     cv2.circle(draw_map, tuple(annotated_map.xy2uv(point[0:2])), 1, (0, 0, 255))
-        cv2.imshow("part", draw_map)
+        cv2.imshow("Particles", draw_map)
         # cv2.waitKey(1)
 
     # @staticmethod
@@ -75,7 +85,6 @@ class Visualizer:
         return draw_map
 
     def get_color_from_float(self, value):
-
         jet = self.jets(value)
         r = jet[0] * 255
         g = jet[1] * 255

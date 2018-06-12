@@ -60,12 +60,14 @@ class Odometry:
                                     yaw = yaw_marker - current_data[dconst.CAMERA_ROTATION][1]
                                     found = True
                                     self.last_processed_timestamp = current_data[dconst.TIMESTAMP]
-                                    self.starting_position = self.marker_position_XY
+                                    self.starting_position = marker_position_XY
                                     self.starting_yaw = yaw
                                     self.current_position = marker_position_XY
-                                    self.current_VIO_position = [current_data[dconst.CAMERA_POSITION][0],
-                                                                 current_data[dconst.CAMERA_POSITION][2]]
+                                    self.current_VIO_position = np.array([current_data[dconst.CAMERA_POSITION][0],
+                                                                 current_data[dconst.CAMERA_POSITION][2]])
                                     self.current_VIO_yaw = current_data[dconst.CAMERA_ROTATION][1]
+                                    self.VIO_yaw_offset = yaw - self.current_VIO_yaw
+                                    print("Initial YAW: ", yaw)
                     else:
                         if current_data[dconst.IMAGE] is not None:
                             marker_detector.update(current_data)
@@ -85,16 +87,19 @@ class Odometry:
 
     # private function that updates the odometry variables
     def _update_odometry(self, vio_data):
-        self.previous_VIO_yaw = self.current_VIO_yaw
         self.previous_VIO_position = self.current_VIO_position
+        self.previous_VIO_yaw = self.current_VIO_yaw
 
         self.current_VIO_yaw = vio_data[dconst.CAMERA_ROTATION][1]
-        self.current_VIO_position = [vio_data[dconst.CAMERA_POSITION][0],
-                                     vio_data[dconst.CAMERA_POSITION][2]]
+        self.current_VIO_position = np.array([vio_data[dconst.CAMERA_POSITION][0], vio_data[dconst.CAMERA_POSITION][2]])
 
         self.delta_VIO_yaw = self.current_VIO_yaw - self.previous_VIO_yaw
+        print("Current YAW: ", self.current_VIO_yaw)
+        print("Previous YAW: ", self.previous_VIO_yaw)
+        
 
         self.delta_VIO_position = self.current_VIO_position - self.previous_VIO_position
+
 
         # self.previous_yaw = self.current_yaw
         # self.current_yaw = vio_data[dconst.CAMERA_ROTATION][1]

@@ -17,7 +17,7 @@ import cv2
 AUTO_DETECT_STARTING_POINT = 1
 STEP_PAUSE = 1
 
-data_folder = './data/107H'
+data_folder = './data/82M'
 map_featsfile = './res/mapFeatures.yml'
 map_image = './res/Walls.png'
 walkable_image = './res/Walkable.png'

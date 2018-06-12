@@ -1,5 +1,5 @@
 import numpy as np
-from math import trunc
+from math import trunc, pi
 from plotting.visualizer import Visualizer
 from numba import jit
 import time
@@ -10,6 +10,10 @@ from scipy.spatial.distance import cdist
 PF_HIT_WALL = -1
 PF_NOT_VALID = -2
 
+PF_X = 0
+PF_Z = 1
+PF_YAW = 2
+PF_SCORE = 3
 
 class ParticleFilter:
 
@@ -44,9 +48,18 @@ class ParticleFilter:
         self.particles = np.column_stack((sample_x, sample_y, yaws, weights))
         self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
 
-    def step(self, measurements, observations):
+    def initialize_particles_uniform_with_yaw(self, initial_yaw, position_noise_sigma=0.5, yaw_noise_sigma=0.01):
+        # initialize N random particles all over the walkable area
+        sample_x = np.random.uniform(0., self.annotated_map.mapsize_xy[1], self.num_particles)
+        sample_y = np.random.uniform(0., self.annotated_map.mapsize_xy[0], self.num_particles)
+        yaws = initial_yaw + np.random.normal(0, yaw_noise_sigma, self.num_particles)
+        weights = np.ones(self.num_particles)
+        self.particles = np.column_stack((sample_x, sample_y, yaws, weights))
+        self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
+
+    def step(self, measurements_deltas, observations):
         # print ("Particle Filter step")
-        self.move_particles_by(measurements[0], measurements[1], position_noise_sigma=0.5)
+        self.move_particles_by(measurements_deltas[0], measurements_deltas[1], position_noise_sigma=0.5, yaw_noise_sigma=0.001)
         # self.score_particles(observations)
         self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
         # t0 = time.time()
@@ -55,46 +68,71 @@ class ParticleFilter:
         # print(t1-t0)
 
 
-    def move_particles_by(self, delta_pos, delta_yaw, position_noise_sigma=0.1):
-        sample_x, sample_y = self.__get_direction_noise(delta_pos, len(self.particles), sigma_x=0.1, sigma_y=0.1)
+    def move_particles_by(self, delta_pos, delta_yaw, position_noise_sigma=0.1, yaw_noise_sigma = 0.1):
+        sample_x, sample_z = self.__get_direction_noise(delta_pos, len(self.particles), sigma_x=position_noise_sigma,
+                                                        sigma_z=position_noise_sigma)
+        yaws = self.particles[:, 2] + delta_yaw + np.random.normal(0, yaw_noise_sigma, self.num_particles)
+
+        theta = self.particles[:, 2]
+
         uv_pt1 = self.annotated_map.xy2uv_vectorized(self.particles[:, 0:2])
-        uv_pt2 = self.annotated_map.xy2uv_vectorized(self.particles[:, 0:2] + np.column_stack((sample_x, sample_y)))
-        self.particles = wall_hit(self.particles, uv_pt1, uv_pt2, self.walls_image)
-        sample_x = sample_x[self.particles[:, 3] >= 0]
-        sample_y = sample_y[self.particles[:, 3] >= 0]
-        self.particles = self.particles[self.particles[:, 3] >= 0]
-        self.particles[:, 0] += sample_x
-        self.particles[:, 1] += sample_y
+
+        delta_tmp = delta_pos # + np.column_stack((sample_x, sample_z))
+        x = self.particles[:, PF_X] + delta_tmp[0] * np.cos(theta) + -delta_tmp[1] * np.sin(theta)
+        z = self.particles[:, PF_Z] + -delta_tmp[1] * np.cos(theta) - delta_tmp[0] * np.sin(theta)
+
+        # x = (self.particles[:, PF_X] + np.cos(self.particles[:, PF_YAW]) * delta_pos[PF_X] +
+        #      np.sin(self.particles[:, PF_YAW]) * -delta_pos[PF_Z])
+        # z = (self.particles[:, PF_Z] - np.sin(self.particles[:, PF_YAW]) * delta_pos[PF_X] +
+        #      np.cos(self.particles[:, PF_YAW]) * -delta_pos[PF_Z])
+
+        # self.vis.plot_particle_displacement(annotated_map=self.annotated_map, particles=self.particles,
+        #                                     destinations=np.column_stack((x, z)))
+
+        uv_pt2 = self.annotated_map.xy2uv_vectorized(np.column_stack((x, z)))
+
+        # self.particles = wall_hit(self.particles, uv_pt1, uv_pt2, self.walls_image)
+        # sample_x = sample_x[self.particles[:, 3] >= 0]
+        # x = x[self.particles[:, 3] >= 0]
+        # sample_z = sample_z[self.particles[:, 3] >= 0]
+        # z = z[self.particles[:, 3] >= 0]
+        # yaws = yaws[self.particles[:, 3] >= 0]
+
+        # self.particles = self.particles[self.particles[:, 3] >= 0]
+        self.particles[:, 0] = x
+        self.particles[:, 1] = z
+        self.particles[:, 2] = yaws
 
     def score_particles(self, observations):
         if observations[0] is not None:
             d = cdist(self.particles[:, 0:2], [observations[0]], metric='euclidean')
-            self.particles[self.particles[:,3]>=0,3] = (1/(1+d[self.particles[:,3]>=0])).transpose()
+            self.particles[self.particles[:,PF_SCORE]>=0., PF_SCORE] = (1/(1+d[self.particles[:, PF_SCORE] >= 0.])).transpose()
 
     def resample_particles(self):
         if len(self.particles) > 0:
             new_particles = np.zeros(np.shape(self.particles))
             # print(len(self.particles))
-            tot_score = np.sum(self.particles[:,3])
-            w = self.particles[:,3]
+            tot_score = np.sum(self.particles[:, PF_SCORE])
+            w = self.particles[:, PF_SCORE]
             if tot_score >0:
                 w /= tot_score
             idx = np.random.choice(len(w), self.num_particles, [w])
             new_particles = self.particles[idx]
             self.particles = new_particles
-            self.particles[:,3] = 1.
+            self.particles[:, PF_SCORE] = 1.
+            print(len(self.particles))
         # else:
         #     raise RuntimeError("No particles left")
 
     @staticmethod
-    def __get_direction_noise(delta_pos, num_samples, sigma_x=0.1, sigma_y=0.1):
+    def __get_direction_noise(delta_pos, num_samples, sigma_x=0.1, sigma_z=0.1):
         tot_delta = np.sqrt(np.sum(delta_pos*delta_pos))
         x_ratio = (abs(delta_pos[0]) / tot_delta) * sigma_x
-        y_ratio = (abs(delta_pos[1]) / tot_delta) * sigma_y
+        y_ratio = (abs(delta_pos[1]) / tot_delta) * sigma_z
 
-        if abs(delta_pos[0]) < 0.05:
+        if abs(delta_pos[0]) < 0.01:
             x_ratio = 0
-        if abs(delta_pos[1]) < 0.05:
+        if abs(delta_pos[1]) < 0.01:
             y_ratio = 0
 
         sample_x = np.random.normal(delta_pos[0], x_ratio, num_samples)
@@ -104,7 +142,7 @@ class ParticleFilter:
 
 
 @jit(nopython=True)
-def wall_hit(particles, uv_pt1, uv_pt2, m):  # improved version? need to test!
+def wall_hit(particles, uv_pt1, uv_pt2, m):
 
     """Traversability calculation:
     Inputs are pixel locations (r1,c1) and (r2,c2) and 2D map array.

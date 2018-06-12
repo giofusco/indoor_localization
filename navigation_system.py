@@ -47,7 +47,7 @@ class NavigationSystem:
         if not uniform:
             self.particle_filter.initialize_particles_at(measured_pos, measured_yaw, .1, 0.1)
         else:
-            self.particle_filter.initialize_particles_uniform(.1, .1)
+            self.particle_filter.initialize_particles_uniform_with_yaw(measured_yaw, .1, .01)
 
     def detect_starting_position(self):
         self.observers[cnames.ODOMETRY].set_initial_position(self.data_source, self.marker_detector)
@@ -65,7 +65,7 @@ class NavigationSystem:
             # todo: fix yaw over time
             measured_pos_delta, measured_yaw_delta = self.observers[cnames.ODOMETRY].get_measurements_deltas()
             observed_pos, observed_yaw = self.observers[cnames.MARKER_DETECTOR].get_observations(annotated_map=self.annotated_map)
-            measured_pos, measured_yaw = self.observers[cnames.ODOMETRY].get_measurements()
+            # measured_pos, measured_yaw = self.observers[cnames.ODOMETRY].get_measurements()
             self.visualizer.show_frame(self.current_data[dconst.IMAGE])
 
             # self.visualizer.plot_measured_position_on_map(measured_pos, self.annotated_map)
@@ -73,10 +73,10 @@ class NavigationSystem:
             #     self.visualizer.plot_measured_position_on_map(observed_pos, self.annotated_map, color=(255,0,0))
 
 
-            self.particle_filter.step(measurements=[measured_pos_delta, measured_yaw_delta],
+            self.particle_filter.step(measurements_deltas=[measured_pos_delta, measured_yaw_delta],
                                       observations=[observed_pos, observed_yaw])
-            uv = self.annotated_map.xy2uv(self.observers[cnames.ODOMETRY].current_position)
-            self.position_trace.append(uv)
+            # uv = self.annotated_map.xy2uv(self.observers[cnames.ODOMETRY].current_position)
+            # self.position_trace.append(uv)
 
         else:
             raise RuntimeError("Out of Data to process. Ending navigation system.")
