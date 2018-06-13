@@ -48,7 +48,7 @@ class ParticleFilter:
         self.particles = np.column_stack((sample_x, sample_y, yaws, weights))
         self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
 
-    def initialize_particles_uniform_with_yaw(self, initial_yaw, position_noise_sigma=0.5, yaw_noise_sigma=0.01):
+    def initialize_particles_uniform_with_yaw(self, initial_yaw, position_noise_sigma=0.5, yaw_noise_sigma=0.005):
         # initialize N random particles all over the walkable area
         sample_x = np.random.uniform(0., self.annotated_map.mapsize_xy[1], self.num_particles)
         sample_y = np.random.uniform(0., self.annotated_map.mapsize_xy[0], self.num_particles)
@@ -59,72 +59,62 @@ class ParticleFilter:
 
     def step(self, measurements_deltas, observations):
         # print ("Particle Filter step")
-        self.move_particles_by(measurements_deltas[0], measurements_deltas[1], position_noise_sigma=0.5, yaw_noise_sigma=0.001)
+        self.move_particles_by(measurements_deltas[0], measurements_deltas[1])
         # self.score_particles(observations)
         self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
         # t0 = time.time()
-        self.resample_particles()
+        self.resample_particles(position_noise_sigma=0.1, yaw_noise_sigma=0.05)
         # t1 = time.time()
         # print(t1-t0)
 
 
-    def move_particles_by(self, delta_pos, delta_yaw, position_noise_sigma=0.1, yaw_noise_sigma = 0.1):
-        sample_x, sample_z = self.__get_direction_noise(delta_pos, len(self.particles), sigma_x=position_noise_sigma,
-                                                        sigma_z=position_noise_sigma)
-        yaws = self.particles[:, 2] + delta_yaw + np.random.normal(0, yaw_noise_sigma, self.num_particles)
+    def move_particles_by(self, delta_pos, delta_yaw):
 
-        theta = self.particles[:, 2]
+        start_pt = (self.annotated_map.xy2uv_vectorized(self.particles[:, 0:2]))
+        delta = np.linalg.norm(delta_pos, ord=2)
+        x = self.particles[:, 0] - np.sin(self.particles[:, 2]) * delta
+        z = self.particles[:, 1] + np.cos(self.particles[:, 2]) * delta
+        dest_pt = self.annotated_map.xy2uv_vectorized(np.column_stack((x, z)))
 
-        uv_pt1 = self.annotated_map.xy2uv_vectorized(self.particles[:, 0:2])
-
-        delta_tmp = delta_pos # + np.column_stack((sample_x, sample_z))
-        x = self.particles[:, PF_X] + delta_tmp[0] * np.cos(theta) + -delta_tmp[1] * np.sin(theta)
-        z = self.particles[:, PF_Z] + -delta_tmp[1] * np.cos(theta) - delta_tmp[0] * np.sin(theta)
-
-        # x = (self.particles[:, PF_X] + np.cos(self.particles[:, PF_YAW]) * delta_pos[PF_X] +
-        #      np.sin(self.particles[:, PF_YAW]) * -delta_pos[PF_Z])
-        # z = (self.particles[:, PF_Z] - np.sin(self.particles[:, PF_YAW]) * delta_pos[PF_X] +
-        #      np.cos(self.particles[:, PF_YAW]) * -delta_pos[PF_Z])
+        new_yaws = self.particles[:, 2] + delta_yaw
 
         # self.vis.plot_particle_displacement(annotated_map=self.annotated_map, particles=self.particles,
-        #                                     destinations=np.column_stack((x, z)))
+        #                                      destinations_uv=dest)
 
-        uv_pt2 = self.annotated_map.xy2uv_vectorized(np.column_stack((x, z)))
+        self.particles = wall_hit(self.particles, start_pt, dest_pt, self.walls_image)
+        x = x[self.particles[:, 3] >= 0]
+        z = z[self.particles[:, 3] >= 0]
+        new_yaws = new_yaws[self.particles[:, 3] >= 0]
 
-        # self.particles = wall_hit(self.particles, uv_pt1, uv_pt2, self.walls_image)
-        # sample_x = sample_x[self.particles[:, 3] >= 0]
-        # x = x[self.particles[:, 3] >= 0]
-        # sample_z = sample_z[self.particles[:, 3] >= 0]
-        # z = z[self.particles[:, 3] >= 0]
-        # yaws = yaws[self.particles[:, 3] >= 0]
-
-        # self.particles = self.particles[self.particles[:, 3] >= 0]
+        self.particles = self.particles[self.particles[:, 3] >= 0]
         self.particles[:, 0] = x
         self.particles[:, 1] = z
-        self.particles[:, 2] = yaws
+        self.particles[:, 2] = new_yaws
 
     def score_particles(self, observations):
         if observations[0] is not None:
             d = cdist(self.particles[:, 0:2], [observations[0]], metric='euclidean')
             self.particles[self.particles[:,PF_SCORE]>=0., PF_SCORE] = (1/(1+d[self.particles[:, PF_SCORE] >= 0.])).transpose()
 
-    def resample_particles(self):
+    def resample_particles(self, position_noise_sigma=0.1, yaw_noise_sigma=0.05):
         if len(self.particles) > 0:
-            new_particles = np.zeros(np.shape(self.particles))
-            # print(len(self.particles))
             tot_score = np.sum(self.particles[:, PF_SCORE])
             w = self.particles[:, PF_SCORE]
+
             if tot_score >0:
                 w /= tot_score
             idx = np.random.choice(len(w), self.num_particles, [w])
             new_particles = self.particles[idx]
             self.particles = new_particles
             self.particles[:, PF_SCORE] = 1.
+            self.particles[:, PF_YAW] += np.random.normal(0, yaw_noise_sigma, self.num_particles)
+            self.particles[:, PF_X] += np.random.normal(0, position_noise_sigma, self.num_particles)
+            self.particles[:, PF_Z] += np.random.normal(0, position_noise_sigma, self.num_particles)
             print(len(self.particles))
         # else:
         #     raise RuntimeError("No particles left")
 
-    @staticmethod
+    @staticmethod #TODO: rewrite this incorporating YAW
     def __get_direction_noise(delta_pos, num_samples, sigma_x=0.1, sigma_z=0.1):
         tot_delta = np.sqrt(np.sum(delta_pos*delta_pos))
         x_ratio = (abs(delta_pos[0]) / tot_delta) * sigma_x

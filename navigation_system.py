@@ -47,7 +47,7 @@ class NavigationSystem:
         if not uniform:
             self.particle_filter.initialize_particles_at(measured_pos, measured_yaw, .1, 0.1)
         else:
-            self.particle_filter.initialize_particles_uniform_with_yaw(measured_yaw, .1, .01)
+            self.particle_filter.initialize_particles_uniform_with_yaw(measured_yaw, .1, .00005)
 
     def detect_starting_position(self):
         self.observers[cnames.ODOMETRY].set_initial_position(self.data_source, self.marker_detector)

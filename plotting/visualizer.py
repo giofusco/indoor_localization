@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 from numba import jit
 import matplotlib.pyplot as plt
-
+from math import pi, cos, sin
 
 NAVIGATION_WINDOW_NAME = 'Trajectory'
 FRAME_WINDOW_NAME = 'Current Frame'
@@ -41,15 +41,26 @@ class Visualizer:
 #
 #     return image
 
-    def plot_particle_displacement(self, annotated_map, particles, destinations):
+    def plot_particle_displacement(self, annotated_map, particles, destinations_uv):
         draw_map = self.draw_map.copy()
+        pos = (annotated_map.xy2uv_vectorized(particles[:, 0:2]))
+        # dest = annotated_map.xy2uv_vectorized(destinations_uv)
+        # dest = (annotated_map.xy2uv_vectorized(destinations[:, 0:2]))
+        # deltas = dest - pos
+
         for p in range(len(particles)):
-            cv2.circle(draw_map, tuple(annotated_map.xy2uv(particles[p][0:2])), 3,
+            cv2.circle(draw_map, tuple(pos[p]), 3,
                        (0, 255, 0))
-            cv2.circle(draw_map, tuple(annotated_map.xy2uv(destinations[p][0:2])), 5, (0, 0, 255))
+            # yaw = particles[p][2]
+            # x = int(cos(yaw) * (delta_uv[0]))
+            # y = int(sin(yaw) * (delta_uv[1]))
+            cv2.circle(draw_map, (destinations_uv[p][0], destinations_uv[p][1]), 5, (0, 0, 255))
+            # cv2.circle(draw_map, tuple(annotated_map.xy2uv(destinations[p][0:2])), 5, (0, 0, 255))
+            # pos = tuple(annotated_map.xy2uv(destinations[p][0:2]))
+            draw_map = cv2.arrowedLine(draw_map, (pos[p][0], pos[p][1]), (destinations_uv[p][0], destinations_uv[p][1]), (0, 255, 0), 2)
 
         cv2.imshow("DISPLACEMENT", draw_map)
-        cv2.waitKey(10)
+        # cv2.waitKey(10)
 
     # @staticmethod
     def show_frame(self, image):

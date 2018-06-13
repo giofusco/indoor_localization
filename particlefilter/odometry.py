@@ -89,31 +89,10 @@ class Odometry:
     def _update_odometry(self, vio_data):
         self.previous_VIO_position = self.current_VIO_position
         self.previous_VIO_yaw = self.current_VIO_yaw
-
         self.current_VIO_yaw = vio_data[dconst.CAMERA_ROTATION][1]
         self.current_VIO_position = np.array([vio_data[dconst.CAMERA_POSITION][0], vio_data[dconst.CAMERA_POSITION][2]])
-
         self.delta_VIO_yaw = self.current_VIO_yaw - self.previous_VIO_yaw
-        print("Current YAW: ", self.current_VIO_yaw)
-        print("Previous YAW: ", self.previous_VIO_yaw)
-        
-
         self.delta_VIO_position = self.current_VIO_position - self.previous_VIO_position
-
-
-        # self.previous_yaw = self.current_yaw
-        # self.current_yaw = vio_data[dconst.CAMERA_ROTATION][1]
-        # self.previous_position = self.current_position
-        #
-        # delta_yaw = self.last_VIO_yaw_on_marker - self.last_marker_yaw
-        # # print "Delta YAW: ", delta_yaw * 180 / math.pi
-        # delta_X = vio_data[dconst.CAMERA_POSITION][0] - self.last_VIO_pos_on_marker[0]
-        # delta_Z = vio_data[dconst.CAMERA_POSITION][2] - self.last_VIO_pos_on_marker[1]
-        # delta_Z *= -1
-        # x = self.last_marker_position[0] + math.cos(delta_yaw) * delta_X + math.sin(delta_yaw) * delta_Z
-        # z = self.last_marker_position[1] - math.sin(delta_yaw) * delta_X + math.cos(delta_yaw) * delta_Z
-        # self.current_yaw = self.last_marker_yaw + delta_yaw
-        # self.current_position = np.asarray([x, z], np.float)
 
 
     #returns raw VIO measurements
