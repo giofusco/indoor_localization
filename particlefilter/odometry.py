@@ -34,6 +34,9 @@ class Odometry:
         self.delta_VIO_yaw = None
         self.delta_VIO_position = None
 
+        # difference between known initial absolute yaw (given by marker for now)
+        self.yaw_offset = 0
+
     def set_initial_position(self, data_source, marker_detector=None, trigger_marker_id='55'):
         if marker_detector is not None:
             found = False
@@ -67,6 +70,7 @@ class Odometry:
                                                                  current_data[dconst.CAMERA_POSITION][2]])
                                     self.current_VIO_yaw = current_data[dconst.CAMERA_ROTATION][1]
                                     self.VIO_yaw_offset = yaw - self.current_VIO_yaw
+                                    self.current_abs_yaw = yaw
                                     print("Initial YAW: ", yaw)
                     else:
                         if current_data[dconst.IMAGE] is not None:
@@ -83,17 +87,19 @@ class Odometry:
         # print("***", vio_data[dconst.VIO_STATUS])
         # if vio_data[dconst.VIO_STATUS] == 'normal' or vio_data[dconst.VIO_STATUS] == 'limited':
         self._update_odometry(vio_data)
+        print("YAW: ", self.current_abs_yaw)
         self.last_processed_timestamp = vio_data[dconst.TIMESTAMP]
 
     # private function that updates the odometry variables
     def _update_odometry(self, vio_data):
+
         self.previous_VIO_position = self.current_VIO_position
         self.previous_VIO_yaw = self.current_VIO_yaw
         self.current_VIO_yaw = vio_data[dconst.CAMERA_ROTATION][1]
         self.current_VIO_position = np.array([vio_data[dconst.CAMERA_POSITION][0], vio_data[dconst.CAMERA_POSITION][2]])
         self.delta_VIO_yaw = self.current_VIO_yaw - self.previous_VIO_yaw
         self.delta_VIO_position = self.current_VIO_position - self.previous_VIO_position
-
+        self.current_abs_yaw += self.delta_VIO_yaw
 
     #returns raw VIO measurements
     def get_measurements(self):
@@ -105,4 +111,4 @@ class Odometry:
 
     # returns the initial position and yaw measured when looking for a marker in the beginning
     def get_initial_measurements(self):
-        return self.starting_position, self.starting_yaw
+        return self.starting_position, self.starting_yaw, self.VIO_yaw_offset

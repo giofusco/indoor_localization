@@ -41,6 +41,9 @@ class AnnotatedMap:
         cv2.imshow("MAP", layermap)
         print("MAP LOADED")
 
+    def get_walkable_mask(self):
+        return self.floormap['Walkable']
+
     def get_walls_image(self):
         return self.floormap['Walls']
 

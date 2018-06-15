@@ -49,12 +49,12 @@ class Visualizer:
         # deltas = dest - pos
 
         for p in range(len(particles)):
-            cv2.circle(draw_map, tuple(pos[p]), 3,
+            cv2.circle(draw_map, tuple(pos[p]), 1,
                        (0, 255, 0))
             # yaw = particles[p][2]
             # x = int(cos(yaw) * (delta_uv[0]))
             # y = int(sin(yaw) * (delta_uv[1]))
-            cv2.circle(draw_map, (destinations_uv[p][0], destinations_uv[p][1]), 5, (0, 0, 255))
+            cv2.circle(draw_map, (destinations_uv[p][0], destinations_uv[p][1]), 2, (0, 0, 255))
             # cv2.circle(draw_map, tuple(annotated_map.xy2uv(destinations[p][0:2])), 5, (0, 0, 255))
             # pos = tuple(annotated_map.xy2uv(destinations[p][0:2]))
             draw_map = cv2.arrowedLine(draw_map, (pos[p][0], pos[p][1]), (destinations_uv[p][0], destinations_uv[p][1]), (0, 255, 0), 2)
@@ -74,19 +74,34 @@ class Visualizer:
         cv2.imshow(window_name, traj_image)
         # cv2.waitKey(1)
 
-    # @staticmethod
-    # @jit(nopython=True)
     def plot_particles(self, annotated_map, particles):
         draw_map = self.draw_map.copy()
-        score_colors = self.jets(particles[:,3])*255
-        for p in range(len(particles)):
-            cv2.circle(draw_map, tuple(annotated_map.xy2uv(particles[p][0:2])), int(5*(particles[p,3])),
+        valid_particles = particles[particles[:,3]>=0]
+        score_colors = self.jets(valid_particles[:,3])*255
+        for p in range(len(valid_particles)):
+            cv2.circle(draw_map, tuple(annotated_map.xy2uv(valid_particles[p][0:2])), int(5*(valid_particles[p,3])),
                        (score_colors[p,2], score_colors[p,1], score_colors[p,0]))
             # if point[3] > 0.5:
             # cv2.circle(draw_map, tuple(annotated_map.xy2uv(point[0:2])), 1, (0, 255, 0))
             # else:
             #     cv2.circle(draw_map, tuple(annotated_map.xy2uv(point[0:2])), 1, (0, 0, 255))
         cv2.imshow("Particles", draw_map)
+        # cv2.waitKey(1)
+
+
+    def draw_points(self, annotated_map, points, size=3, color=(0, 0, 255), title="Points"):
+        draw_map = self.draw_map.copy()
+
+        for p in range(len(points)):
+            cv2.circle(draw_map, tuple(points[p][0:2]), int(size), color)
+        cv2.imshow(title, draw_map)
+
+    def plot_points(self, annotated_map, points, size=3, color=(0, 0, 255), title="Points"):
+        draw_map = self.draw_map.copy()
+
+        for p in range(len(points)):
+            cv2.circle(draw_map, tuple(annotated_map.xy2uv(points[p][0:2])), int(size), color)
+        cv2.imshow(title, draw_map)
         # cv2.waitKey(1)
 
     # @staticmethod
