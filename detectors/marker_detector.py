@@ -82,6 +82,9 @@ class MarkerDetector:
             else:
                 self.best_detection_id = None
                 self.num_frame_id_detection = 0
+            if self.best_detection_id is not None:
+                print(self.best_detection_id)
+                self.plot_detection(self.best_detection_id)
 
     def _get_marker_height(self, corners):
         minY = 1e6
@@ -120,7 +123,7 @@ class MarkerDetector:
         cv2.circle(self.last_frame_RGB, tuple(corners[0][3]), 3, (0, 0, 255), -1)
 
         cv2.imshow(DETECTION_WINDOW_NAME, self.last_frame_RGB)
-
+        # cv2.waitKey(-1)
 
     @staticmethod
     def compute_XY_position_on_marker_detection(marker_id, tvec, rvec, annotated_map):

@@ -1,16 +1,17 @@
-from observer import IObserver
-import data_constants as dc
+# from observer import IObserver
+from input import data_constants as dc
 import numpy as np
 import cv2
 import camera_info
-import svmutil
+# import svmutil
 import math
 import camera_info
+from classifiers import svmutil
 
 DETECTION_WINDOW_NAME = "SignDetector"
 
 
-class SignDetector(IObserver):
+class SignDetector:
 
     def __init__(self, name, camera_id = camera_info.IPHONE8_640x360):
         # init descriptors
@@ -34,7 +35,13 @@ class SignDetector(IObserver):
 
         self.fx = self.camera_matrix[0][0,0]
         self.fy = self.camera_matrix[1][0,1]
+        self.observed_distance_to_sign = -1.
 
+
+    def get_observation(self, data):
+        self.observed_distance_to_sign = -1.
+        self.update(data)
+        return self.observed_distance_to_sign
 
     def extract_features_halves(self, img, feature_extractor):
         h, w, _ = img.shape
@@ -47,7 +54,7 @@ class SignDetector(IObserver):
         des.append(d)
 
         k, d = feature_extractor.detectAndCompute(img[0:h, int(w / 2) + 1:w], None)
-        for i in xrange(0, len(k)):
+        for i in range(0, len(k)):
             k[i].pt = (k[i].pt[0] + int(w / 2) + 1, k[i].pt[1])
 
         # cv2.drawKeypoints(sift_img, k, sift_img)
@@ -111,7 +118,7 @@ class SignDetector(IObserver):
 
                     r_hog = self.compute_hog(gray, r, self.hog)
                     p_labels, p_acc, p_vals = svmutil.svm_predict([1], r_hog.transpose().tolist(), self.svm, '-b 1')
-                    print p_vals
+                    print (p_vals)
                     if p_vals[0][0] > 0.5:
                         # cv2.rectangle(output_img, (r[0], r[1]), (r[0] + r[2], r[1] + r[3]), (255, 0, 0), 2)
                         # cv2.imshow("Stage2", output_img)
@@ -159,7 +166,7 @@ class SignDetector(IObserver):
         hh = Ihsv[:,:,0] >= ht
         hs = Ihsv[:, :, 1] >= st
         M = hh & hs
-        print st, ht
+        # print st, ht
         rect_element = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
         closing = cv2.morphologyEx(M.astype(np.uint8)*255 , cv2.MORPH_CLOSE, rect_element, iterations=2)
         horizontal_sum = np.sum(closing/255, 1)
@@ -181,10 +188,10 @@ class SignDetector(IObserver):
             else:
                 break
         Z = self.fy * 0.2032 / np.sum(horizontal_sum>0)
-        print Z
-        cv2.imshow("ROI_filt", closing)
-        cv2.imshow("ROI", M.astype(np.uint8)*255)
+        self.observed_distance_to_sign = Z
+        # cv2.imshow("ROI_filt", closing)
+        # cv2.imshow("ROI", M.astype(np.uint8)*255)
 
-        cv2.waitKey(-1)
+        # cv2.waitKey(-1)
 
 

@@ -17,29 +17,29 @@ class Visualizer:
         else:
             self.draw_map = map_image.copy()
 
-# @staticmethod
-# def plot_yaw(image):
-#     # plot absolute VIO yaw
-#     p = self.map_data.env_map.xy2uv(self.observers[cnames.ODOMETRY].current_position)
-#     vio_y_rotation = self.observers[cnames.ODOMETRY].starting_yaw + self.current_data[dconst.CAMERA_ROTATION][
-#         1] - math.pi / 2
-#     # vio_y_rotation = self.observers[cnames.ODOMETRY].current_yaw - math.pi/2
-#     # print ">>", vio_y_rotation*180/math.pi
-#     x = int(math.cos(vio_y_rotation) * 20)
-#     y = int(math.sin(vio_y_rotation) * 20)
-#     image = cv2.arrowedLine(image, (p[0], p[1]), (p[0] - x, p[1] + y), (0, 255, 0), 2)
-#
-#     if self.observers[cnames.ODOMETRY].last_marker_yaw is not None:
-#         x = int(math.cos(self.observers[cnames.ODOMETRY].last_marker_yaw - math.pi / 2) * 20)
-#         y = int(math.sin(self.observers[cnames.ODOMETRY].last_marker_yaw - math.pi / 2) * 20)
-#         image = cv2.arrowedLine(image, (p[0], p[1]), (p[0] - x, p[1] + y), (255, 0, 0), 2)
-#     # print "** LAST MARKER YAW ", self.observers[cnames.ODOMETRY].last_marker_yaw * 180/math.pi
-#     # axis_orientation = self.observers[cnames.ODOMETRY].starting_yaw
-#     # x = int(math.cos(axis_orientation - math.pi / 2) * 20)
-#     # y = int(math.sin(axis_orientation - math.pi / 2) * 20)
-#     # image = cv2.arrowedLine(image, (p[0], p[1]), (p[0] - x, p[1] + y), (0, 0, 255), 2)
-#
-#     return image
+    # @staticmethod
+    # def plot_yaw(image):
+    #     # plot absolute VIO yaw
+    #     p = self.map_data.env_map.xy2uv(self.observers[cnames.ODOMETRY].current_position)
+    #     vio_y_rotation = self.observers[cnames.ODOMETRY].starting_yaw + self.current_data[dconst.CAMERA_ROTATION][
+    #         1] - math.pi / 2
+    #     # vio_y_rotation = self.observers[cnames.ODOMETRY].current_yaw - math.pi/2
+    #     # print ">>", vio_y_rotation*180/math.pi
+    #     x = int(math.cos(vio_y_rotation) * 20)
+    #     y = int(math.sin(vio_y_rotation) * 20)
+    #     image = cv2.arrowedLine(image, (p[0], p[1]), (p[0] - x, p[1] + y), (0, 255, 0), 2)
+    #
+    #     if self.observers[cnames.ODOMETRY].last_marker_yaw is not None:
+    #         x = int(math.cos(self.observers[cnames.ODOMETRY].last_marker_yaw - math.pi / 2) * 20)
+    #         y = int(math.sin(self.observers[cnames.ODOMETRY].last_marker_yaw - math.pi / 2) * 20)
+    #         image = cv2.arrowedLine(image, (p[0], p[1]), (p[0] - x, p[1] + y), (255, 0, 0), 2)
+    #     # print "** LAST MARKER YAW ", self.observers[cnames.ODOMETRY].last_marker_yaw * 180/math.pi
+    #     # axis_orientation = self.observers[cnames.ODOMETRY].starting_yaw
+    #     # x = int(math.cos(axis_orientation - math.pi / 2) * 20)
+    #     # y = int(math.sin(axis_orientation - math.pi / 2) * 20)
+    #     # image = cv2.arrowedLine(image, (p[0], p[1]), (p[0] - x, p[1] + y), (0, 0, 255), 2)
+    #
+    #     return image
 
     def plot_particle_displacement(self, annotated_map, particles, destinations_uv):
         draw_map = self.draw_map.copy()

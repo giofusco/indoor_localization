@@ -60,18 +60,18 @@ class Odometry:
                                 marker_position_XY, yaw_marker = marker_detector.get_observations(self.annotated_map)
                                 if marker_position_XY is not None:
                                     # find out what is the VIO theta_0
-                                    yaw = yaw_marker - current_data[dconst.CAMERA_ROTATION][1]
+                                    # yaw = yaw_marker - current_data[dconst.CAMERA_ROTATION][1]
                                     found = True
                                     self.last_processed_timestamp = current_data[dconst.TIMESTAMP]
                                     self.starting_position = marker_position_XY
-                                    self.starting_yaw = yaw
+                                    self.starting_yaw = yaw_marker
                                     self.current_position = marker_position_XY
                                     self.current_VIO_position = np.array([current_data[dconst.CAMERA_POSITION][0],
                                                                  current_data[dconst.CAMERA_POSITION][2]])
                                     self.current_VIO_yaw = current_data[dconst.CAMERA_ROTATION][1]
-                                    self.VIO_yaw_offset = yaw - self.current_VIO_yaw
-                                    self.current_abs_yaw = yaw
-                                    print("Initial YAW: ", yaw)
+                                    self.VIO_yaw_offset =  current_data[dconst.CAMERA_ROTATION][1] - self.starting_yaw
+                                    self.current_abs_yaw = yaw_marker
+                                    print("Initial YAW: ",  yaw_marker)
                     else:
                         if current_data[dconst.IMAGE] is not None:
                             marker_detector.update(current_data)

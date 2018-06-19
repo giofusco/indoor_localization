@@ -12,8 +12,12 @@ PF_NOT_VALID = -2
 
 PF_X = 0
 PF_Z = 1
+PF_U = 0
+PF_V = 1
 PF_YAW = 2
 PF_SCORE = 3
+PF_DELTA_POS = 0
+PF_DELTA_YAW = 1
 
 class ParticleFilter:
 
@@ -30,6 +34,7 @@ class ParticleFilter:
         self.walkable_mask = self.annotated_map.get_walkable_mask()
         self.vis = visualizer
         self.yaw_offset = 0
+        self.tot_motion = 0.
 
 #todo: check if particle is outside of walkable area
     def initialize_particles_at(self, pos, yaw, position_noise_sigma=0.5, yaw_noise_sigma=0.1):
@@ -62,6 +67,7 @@ class ParticleFilter:
             sample_x, sample_z, num_valid = self.remove_non_walkable_locations(sample_x, sample_z)
             n_valid_particles += num_valid
             yaws = yaw_offset + np.random.normal(0, yaw_noise_sigma, num_valid)
+            # yaws = yaw_offset + np.random.normal(0, 0, num_valid)
             weights = np.ones(num_valid)
             num_samples = self.num_particles - n_valid_particles
             if len(self.particles) == 0:
@@ -74,12 +80,15 @@ class ParticleFilter:
 
     def step(self, measurements_deltas, observations):
         # print ("Particle Filter step")
-        self.move_particles_by(measurements_deltas[0], measurements_deltas[1],
-                               position_noise_sigma=0.01, yaw_noise_sigma=0.01)
+        self.move_particles_by(measurements_deltas[PF_DELTA_POS], measurements_deltas[PF_DELTA_YAW],
+                               position_noise_sigma=0.2, yaw_noise_sigma=0.01)
         # self.score_particles(observations)
         self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
         # t0 = time.time()
-        self.resample_particles()
+        self.tot_motion += np.linalg.norm(measurements_deltas[PF_DELTA_POS], ord=2)
+        if  self.tot_motion >= 0.1:
+            self.resample_particles()
+            self.tot_motion = 0.
         # t1 = time.time()
         # print(t1-t0)
 
@@ -87,8 +96,9 @@ class ParticleFilter:
         tmp_pos = np.column_stack((x_vector, z_vector))
         tmp_pt = self.annotated_map.xy2uv_vectorized(tmp_pos)
 
-        sample_x = x_vector[self.walkable_mask[np.array(tmp_pt[:, 1]), np.array(tmp_pt[:, 0])] > 0]
-        sample_z = z_vector[self.walkable_mask[np.array(tmp_pt[:, 1]), np.array(tmp_pt[:, 0])] > 0]
+        idx = [self.walkable_mask[np.array(tmp_pt[:, PF_V]), np.array(tmp_pt[:, PF_U])] > 0]
+        sample_x = x_vector[idx]
+        sample_z = z_vector[idx]
 
         num_valid = len(sample_x)
 
@@ -98,23 +108,27 @@ class ParticleFilter:
                           check_wall_crossing=True):
 
         start_pt = (self.annotated_map.xy2uv_vectorized(self.particles[:, PF_X:PF_YAW]))
+        rotated_delta_pos = [ delta_pos[PF_X] * np.cos(self.particles[:,PF_YAW]) + -delta_pos[PF_Z] * np.sin(self.particles[:,PF_YAW]),
+                              -delta_pos[PF_X] * np.sin(self.particles[:, PF_YAW]) + -delta_pos[PF_Z] * np.cos(
+                                  self.particles[:, PF_YAW])]
 
-        pos_noise = self.__get_direction_noise(delta_pos, len(self.particles), sigma_pos=position_noise_sigma)
-        x = self.particles[:, PF_X] + delta_pos[0] * np.cos(self.particles[:,PF_YAW])  - delta_pos[1] * np.sin(self.particles[:,PF_YAW]) #+ pos_noise[0]
-        z = self.particles[:, PF_Z] - (delta_pos[0] * np.sin(self.particles[:, PF_YAW])  - delta_pos[1] * np.cos(self.particles[:, PF_YAW])) #- pos_noise[1]
+        n = rotated_delta_pos / np.linalg.norm(rotated_delta_pos, ord=2)
+        n_hat = [n[1], -n[0]]
 
-        # delta = np.linalg.norm(delta_pos, ord=2) + np.abs(np.random.normal(0, position_noise_sigma, len(self.particles)))
-        # x = self.particles[:, PF_X] - np.sin(self.particles[:, PF_YAW]) * delta
-        # z = self.particles[:, PF_Z] + np.cos(self.particles[:, PF_YAW]) * delta
+        # eps1 = np.random.normal(np.linalg.norm(rotated_delta_pos, ord=2) * .5, position_noise_sigma, len(self.particles))
+        # eps2 = np.random.normal(np.linalg.norm(rotated_delta_pos, ord=2) * .02, position_noise_sigma, len(self.particles))
+
+        eps1 = np.random.uniform(-np.linalg.norm(rotated_delta_pos, ord=2) * .95, np.linalg.norm(rotated_delta_pos, ord=2) * .95, len(self.particles))
+        eps2 = np.random.uniform(-np.linalg.norm(rotated_delta_pos, ord=2) * .02, np.linalg.norm(rotated_delta_pos, ord=2) * .02, len(self.particles))
+        noise = [eps1 * n[0], eps1 * n[1]] + [eps2 * n_hat[0], eps2 * n_hat[1]] #+ eps2 * n_hat
+
+
+
+        x = self.particles[:, PF_X] + rotated_delta_pos[PF_X] + noise[PF_X]
+        z = self.particles[:, PF_Z] + rotated_delta_pos[PF_Z] + noise[PF_Z]
+
         dest_pt = self.annotated_map.xy2uv_vectorized(np.column_stack((x, z)))
-
-        # self.vis.draw_points(self.annotated_map, start_pt, size=3, color=(0, 0, 255), title="Points - start")
-        # self.vis.draw_points(self.annotated_map, dest_pt, size = 3, color = (0, 0, 255), title = "Points")
-
         new_yaws = self.particles[:, 2] + np.random.normal(0, yaw_noise_sigma, len(self.particles))
-
-        # self.vis.plot_particle_displacement(annotated_map=self.annotated_map, particles=self.particles,
-        #                                        destinations_uv=dest_pt)
 
         if check_wall_crossing:
             self.particles = set_wall_hit_score(self.particles, start_pt, dest_pt, self.walls_image)
@@ -133,7 +147,6 @@ class ParticleFilter:
             self.particles[self.particles[:,PF_SCORE]>=0., PF_SCORE] = (1/(1+d[self.particles[:, PF_SCORE] >= 0.])).transpose()
 
     def resample_particles(self):
-        # if len(self.particles) > 0:
         tot_score = np.sum(self.particles[:, PF_SCORE])
         w = self.particles[:, PF_SCORE]
 
@@ -141,20 +154,15 @@ class ParticleFilter:
             w /= tot_score
         idx = np.random.choice(len(w), self.num_particles, [w])
         new_particles = self.particles[idx]
+
         self.particles = new_particles
         self.particles[:, PF_SCORE] = 1.
-        # self.particles[:, PF_YAW] += np.random.normal(0, yaw_noise_sigma, self.num_particles)
-        self.particles[:, PF_X] += np.random.normal(0, 0.1, self.num_particles)
-        self.particles[:, PF_Z] += np.random.normal(0, 0.1, self.num_particles)
-        print(len(self.particles))
-        # else:
-        #     raise RuntimeError("No particles left")
 
     @staticmethod
     def __get_direction_noise(delta_pos, num_samples, sigma_pos=0.1):
         tot_delta = np.sqrt(np.sum(delta_pos*delta_pos))
-        x_ratio = 2*(abs(delta_pos[0]) / tot_delta)
-        y_ratio = 2*(abs(delta_pos[1]) / tot_delta)
+        x_ratio = ((delta_pos[0]) / tot_delta)
+        y_ratio = ((delta_pos[1]) / tot_delta)
 
         # if abs(delta_pos[0]) < 0.025:
         #     x_ratio = 0
@@ -162,7 +170,7 @@ class ParticleFilter:
         #     y_ratio = 0
 
         noise = np.random.normal(0, sigma_pos, num_samples)
-        return abs(noise * x_ratio), abs(noise * y_ratio)
+        return (noise ), (noise )
         #return np.sign(delta_pos[0])*abs(noise*x_ratio), np.sign(delta_pos[1])*abs(noise*y_ratio)
 
 @jit(nopython=True)

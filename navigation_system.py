@@ -9,8 +9,6 @@ from plotting import visualizer as vis
 from particlefilter.particle_filter import ParticleFilter
 
 
-
-
 class NavigationSystem:
 
     def __init__(self, annotated_map, data_source, marker_detector, visualizer=None):
@@ -47,7 +45,7 @@ class NavigationSystem:
         if not uniform:
             self.particle_filter.initialize_particles_at(measured_pos, measured_yaw, .1, 0.1)
         else:
-            self.particle_filter.initialize_particles_uniform_with_yaw(yaw_offset, .1, .00005)
+            self.particle_filter.initialize_particles_uniform_with_yaw(yaw_offset, .1, .5)
 
     def detect_starting_position(self):
         self.observers[cnames.ODOMETRY].set_initial_position(self.data_source, self.marker_detector)
@@ -62,9 +60,9 @@ class NavigationSystem:
             for name, observer in self.observers.items():
                 observer.update(self.current_data)
 
-            # todo: fix yaw over time
             measured_pos_delta, measured_yaw_delta = self.observers[cnames.ODOMETRY].get_measurements_deltas()
             observed_pos, observed_yaw = self.observers[cnames.MARKER_DETECTOR].get_observations(annotated_map=self.annotated_map)
+            # self.observers[cnames.EXIT_DETECTOR].update(self.current_data)
             # measured_pos, measured_yaw = self.observers[cnames.ODOMETRY].get_measurements()
             self.visualizer.show_frame(self.current_data[dconst.IMAGE])
 
