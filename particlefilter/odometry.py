@@ -87,7 +87,7 @@ class Odometry:
         # print("***", vio_data[dconst.VIO_STATUS])
         # if vio_data[dconst.VIO_STATUS] == 'normal' or vio_data[dconst.VIO_STATUS] == 'limited':
         self._update_odometry(vio_data)
-        print("YAW: ", self.current_abs_yaw)
+        # print("YAW: ", self.current_abs_yaw)
         self.last_processed_timestamp = vio_data[dconst.TIMESTAMP]
 
     # private function that updates the odometry variables

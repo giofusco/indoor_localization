@@ -39,8 +39,8 @@ class SignDetector:
 
 
     def get_observation(self, data):
-        self.observed_distance_to_sign = -1.
-        self.update(data)
+        # self.observed_distance_to_sign = -1.
+        # self.update(data)
         return self.observed_distance_to_sign
 
     def extract_features_halves(self, img, feature_extractor):
@@ -94,6 +94,7 @@ class SignDetector:
         self.marker_height_m = height_m
 
     def update(self, data):
+        self.observed_distance_to_sign = -1.
         if not data[dc.IMAGE] is None:
             self.last_frame_RGB = np.copy(data[dc.IMAGE])
 
@@ -104,7 +105,7 @@ class SignDetector:
 
             gray = cv2.cvtColor(rotated_frame, cv2.COLOR_BGR2GRAY)
             # cv2.imshow("SIGNINPUT", self.last_frame_RGB )
-            cv2.imshow("ROT", rotated_frame)
+            # cv2.imshow("ROT", rotated_frame)
             # cv2.waitKey(1)
             # print(data[dc.CAMERA_ROTATION]*180/3.14)
             rois_stage1 = self.cascade_class.detectMultiScale(gray, 1.25, minNeighbors=1, minSize=(36, 24), maxSize=(180, 240))
@@ -120,8 +121,8 @@ class SignDetector:
                     p_labels, p_acc, p_vals = svmutil.svm_predict([1], r_hog.transpose().tolist(), self.svm, '-b 1')
                     print (p_vals)
                     if p_vals[0][0] > 0.5:
-                        # cv2.rectangle(output_img, (r[0], r[1]), (r[0] + r[2], r[1] + r[3]), (255, 0, 0), 2)
-                        # cv2.imshow("Stage2", output_img)
+                        cv2.rectangle(rotated_frame, (r[0], r[1]), (r[0] + r[2], r[1] + r[3]), (255, 0, 0), 2)
+                        cv2.imshow("Stage2", rotated_frame)
                         if p_vals[0][0] > best_prob:
                             best_prob = p_vals[0][0]
                             self.roi = r

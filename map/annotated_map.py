@@ -38,8 +38,8 @@ class AnnotatedMap:
         self.floormap['Walkable'] = walkmap
         self.mapsize_uv = mapsize
         self.mapsize_xy = (mapsize[0] / self.scale, mapsize[1] / self.scale)
-        cv2.imshow("MAP", layermap)
-        print("MAP LOADED")
+        # cv2.imshow("MAP", layermap)
+        # print("MAP LOADED")
 
     def get_walkable_mask(self):
         return self.floormap['Walkable']
@@ -66,7 +66,7 @@ class AnnotatedMap:
         return np.array([x, y])
 
     def read_map_landmarks(self, mapfile):
-        print("\nLOADING MAP FEATURES: {}".format(mapfile))
+        print("\nLoading map features from '{}'".format(mapfile))
         # to handle collisions create a dictionary whose entries are lists
         map_landmark_dict = defaultdict(list)
         with open(mapfile, 'r') as myfile:
@@ -105,7 +105,7 @@ class AnnotatedMap:
                         else:
                             print('YAML file error')
                             continue
-        print("MAP FEATURES LOADED")
+        print("Done.")
         return map_landmark_dict
 
     @staticmethod
