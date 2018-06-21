@@ -118,7 +118,7 @@ class ParticleFilter:
         # eps1 = np.random.normal(np.linalg.norm(rotated_delta_pos, ord=2) * .5, position_noise_sigma, len(self.particles))
         # eps2 = np.random.normal(np.linalg.norm(rotated_delta_pos, ord=2) * .02, position_noise_sigma, len(self.particles))
 
-        eps1 = np.random.uniform(-np.linalg.norm(rotated_delta_pos, ord=2), np.linalg.norm(rotated_delta_pos, ord=2), len(self.particles))
+        eps1 = np.random.uniform(-np.linalg.norm(rotated_delta_pos, ord=2), np.linalg.norm(rotated_delta_pos, ord=2)*1.2, len(self.particles))
         eps2 = np.random.uniform(-np.linalg.norm(rotated_delta_pos, ord=2) * .2, np.linalg.norm(rotated_delta_pos, ord=2) * .2, len(self.particles))
 
         # eps1 = np.random.uniform(-5., 5., len(self.particles))

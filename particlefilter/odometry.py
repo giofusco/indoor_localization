@@ -41,7 +41,10 @@ class Odometry:
         if marker_detector is not None:
             found = False
             position_XY, yaw = None, None
-            while not found:
+            detection_interrupted = False
+            observed_yaws = []
+            # measured_yaws = []
+            while not found or not detection_interrupted:
                 current_data = data_source.read_next(load_image=True)
                 if not current_data == {}:
                     if current_data[dconst.VIO_STATUS] == 'normal':
@@ -62,6 +65,8 @@ class Odometry:
                                     # find out what is the VIO theta_0
                                     # yaw = yaw_marker - current_data[dconst.CAMERA_ROTATION][1]
                                     found = True
+                                    observed_yaws.append(current_data[dconst.CAMERA_ROTATION][1] - yaw_marker)
+                                    # measured_yaws.append(current_data[dconst.CAMERA_ROTATION][1])
                                     self.last_processed_timestamp = current_data[dconst.TIMESTAMP]
                                     self.starting_position = marker_position_XY
                                     self.starting_yaw = yaw_marker
@@ -72,6 +77,11 @@ class Odometry:
                                     self.VIO_yaw_offset =  current_data[dconst.CAMERA_ROTATION][1] - self.starting_yaw
                                     self.current_abs_yaw = yaw_marker
                                     print("Initial YAW: ",  yaw_marker)
+                            elif found is True:
+                                detection_interrupted = True
+                                yaw = np.median(observed_yaws)
+                                self.VIO_yaw_offset = yaw
+                                # print (yaw)
                     else:
                         if current_data[dconst.IMAGE] is not None:
                             marker_detector.update(current_data)

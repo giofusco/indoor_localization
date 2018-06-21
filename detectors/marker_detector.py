@@ -83,8 +83,8 @@ class MarkerDetector:
                 self.best_detection_id = None
                 self.num_frame_id_detection = 0
             # if self.best_detection_id is not None:
-                # print(self.best_detection_id)
-                # self.plot_detection(self.best_detection_id)
+            #     print(self.best_detection_id)
+            #     self.plot_detection(self.best_detection_id)
 
     def _get_marker_height(self, corners):
         minY = 1e6
@@ -117,10 +117,10 @@ class MarkerDetector:
         if marker_id == -1:
             marker_id = self.best_detection_id
         corners = self.detections[marker_id]['corners']
-        cv2.circle(self.last_frame_RGB, tuple(corners[0][0]), 3, (0, 0, 255), -1)
-        cv2.circle(self.last_frame_RGB, tuple(corners[0][1]), 3, (0, 0, 255), -1)
-        cv2.circle(self.last_frame_RGB, tuple(corners[0][2]), 3, (0, 0, 255), -1)
-        cv2.circle(self.last_frame_RGB, tuple(corners[0][3]), 3, (0, 0, 255), -1)
+        cv2.circle(self.last_frame_RGB, tuple(corners[0][0]), 1, (0, 0, 255), -1)
+        cv2.circle(self.last_frame_RGB, tuple(corners[0][1]), 1, (0, 0, 255), -1)
+        cv2.circle(self.last_frame_RGB, tuple(corners[0][2]), 1, (0, 0, 255), -1)
+        cv2.circle(self.last_frame_RGB, tuple(corners[0][3]), 1, (0, 0, 255), -1)
 
         cv2.imshow(DETECTION_WINDOW_NAME, self.last_frame_RGB)
         cv2.waitKey(-1)
