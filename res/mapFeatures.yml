@@ -3,49 +3,49 @@ map_feature:
 	id: exit_sign
 	position: [6.19862932062, 5.49021454112]
 	orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0]
-	normal: [0, 0]
+	normal: [1, 0]
 map_feature:
 	name: _
 	id: exit_sign
 	position: [6.68566448153, 16.3378158522]
 	orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0]
-	normal: [0, 0]
+	normal: [0, -1]
 map_feature:
 	name: _
 	id: exit_sign
 	position: [9.29794398093, 17.7989213349]
 	orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0]
-	normal: [0, 0]
+	normal: [-1, 0, 1, 0]
 map_feature:
 	name: _
 	id: exit_sign
 	position: [27.9823837902, 16.4263676996]
 	orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0]
-	normal: [0, 0]
+	normal: [0, -1]
 map_feature:
 	name: _
 	id: exit_sign
 	position: [34.9779797378, 13.858364124]
 	orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0]
-	normal: [0, 0]
+	normal: [0, -1]
 map_feature:
 	name: _
 	id: exit_sign
 	position: [34.3581168057, 7.03987187128]
 	orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0]
-	normal: [0, 0]
+	normal: [-1, 0]
 map_feature:
 	name: _
 	id: exit_sign
 	position: [25.6357598331, 6.68566448153]
 	orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0]
-	normal: [0, 0]
+	normal: [1, 0]
 map_feature:
 	name: _
 	id: exit_sign
 	position: [23.2005840286, 5.4459386174]
 	orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0]
-	normal: [0, 0]
+	normal: [1, 0]
 map_feature:
 	name: Room 401
 	id: aruco 0

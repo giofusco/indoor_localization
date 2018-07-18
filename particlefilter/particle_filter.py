@@ -82,13 +82,18 @@ class ParticleFilter:
         # print ("Particle Filter step")
         self.move_particles_by(measurements_deltas[PF_DELTA_POS], measurements_deltas[PF_DELTA_YAW],
                                position_noise_sigma=0.2, yaw_noise_sigma=0.01)
-        # self.score_particles(observations)
-        self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
-        # t0 = time.time()
-        self.tot_motion += np.linalg.norm(measurements_deltas[PF_DELTA_POS], ord=2)
-        if  self.tot_motion >= 0.1:
+        if observations[2] is not None:
+            self.score_particles(observations)
+            self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
             self.resample_particles()
-            self.tot_motion = 0.
+            # self.tot_motion = 0.
+        else:
+            self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
+        # t0 = time.time()
+            self.tot_motion += np.linalg.norm(measurements_deltas[PF_DELTA_POS], ord=2)
+            if self.tot_motion >= 0.1:
+                self.resample_particles()
+                self.tot_motion = 0.
         # t1 = time.time()
         # print(t1-t0)
 
@@ -127,8 +132,6 @@ class ParticleFilter:
 
         noise = [eps1 * n[0], eps1 * n[1]] + [eps2 * n_hat[0], eps2 * n_hat[1]] #+ eps2 * n_hat
 
-
-
         x = self.particles[:, PF_X] + rotated_delta_pos[PF_X] + noise[PF_X]
         z = self.particles[:, PF_Z] + rotated_delta_pos[PF_Z] + noise[PF_Z]
 
@@ -147,8 +150,19 @@ class ParticleFilter:
         self.particles[:, PF_YAW] = new_yaws
 
     def score_particles(self, observations):
-        if observations[0] is not None:
-            d = cdist(self.particles[:, 0:2], [observations[0]], metric='euclidean')
+        # print(observations[2])
+        if observations[2] is not None:
+            cnt = 0
+            d_global = np.zeros((len(self.particles), len(self.annotated_map.map_landmarks_dict['exit_sign'])))
+            for s in self.annotated_map.map_landmarks_dict['exit_sign']:
+                # print(s.position)
+                tmp_d = np.abs(observations[2] - cdist(self.particles[:, 0:2], [s.position], metric='euclidean'))
+                d_global[:,cnt] = tmp_d.squeeze()
+                cnt += 1
+            # d = observations[2] - d_global.min(axis=1)
+            d = d_global.min(axis=1)
+            # print(d)
+            # d = cdist(self.particles[:, 0:2], [observations[0]], metric='euclidean')
             self.particles[self.particles[:,PF_SCORE]>=0., PF_SCORE] = (1/(1+d[self.particles[:, PF_SCORE] >= 0.])).transpose()
 
     def resample_particles(self):
@@ -157,7 +171,7 @@ class ParticleFilter:
 
         if tot_score > 0:
             w /= tot_score
-        idx = np.random.choice(len(w), self.num_particles, [w])
+        idx = np.random.choice(len(w), self.num_particles, p=w)
         new_particles = self.particles[idx]
 
         self.particles = new_particles
@@ -177,6 +191,7 @@ class ParticleFilter:
         noise = np.random.normal(0, sigma_pos, num_samples)
         return (noise ), (noise )
         #return np.sign(delta_pos[0])*abs(noise*x_ratio), np.sign(delta_pos[1])*abs(noise*y_ratio)
+
 
 @jit(nopython=True)
 def set_wall_hit_score(particles, uv_pt1, uv_pt2, m):

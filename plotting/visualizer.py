@@ -41,6 +41,24 @@ class Visualizer:
     #
     #     return image
 
+
+    def plot_map_feature(self, annotated_map, feature_id, num_feature):
+        draw_map = self.draw_map.copy()
+        if num_feature is not None:
+            pos = annotated_map.xy2uv(annotated_map.map_landmarks_dict[feature_id][num_feature].position)
+            cv2.circle(draw_map, tuple(pos), 1, (128, 255, 0))
+            cv2.imshow("Location of " + feature_id)
+        else:
+            for f in annotated_map.map_landmarks_dict[feature_id]:
+                pos = annotated_map.xy2uv(f.position)
+                cv2.circle(draw_map, tuple(pos), 1, (128, 255, 0))
+                cv2.putText(draw_map,str(f.position),tuple(pos),cv2.FONT_HERSHEY_COMPLEX_SMALL,.5, (0,255,0))
+            cv2.imshow("Locations of " + feature_id, draw_map)
+            cv2.waitKey(-1)
+
+
+
+
     def plot_particle_displacement(self, annotated_map, particles, destinations_uv):
         draw_map = self.draw_map.copy()
         pos = (annotated_map.xy2uv_vectorized(particles[:, 0:2]))

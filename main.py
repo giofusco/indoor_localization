@@ -19,7 +19,7 @@ AUTO_DETECT_STARTING_POINT = 1
 STEP_PAUSE = 1
 
 # 99S undershooting
-data_folder = './data/103H'
+data_folder = './data/97S'
 map_featsfile = './res/mapFeatures.yml'
 map_image = './res/Walls.png'
 walkable_image = './res/Walkable.png'
@@ -37,6 +37,7 @@ def main():
 
     annotated_map = AnnotatedMap(map_image, walkable_image, map_featsfile)
     visualizer = Visualizer(annotated_map.get_walls_image())
+    # visualizer.plot_map_feature(annotated_map, 'exit_sign', None)
 
     sign_detector = SignDetector(components_names.EXIT_DETECTOR)
     marker_detector = MarkerDetector(components_names.MARKER_DETECTOR, min_consecutive_frames=1)

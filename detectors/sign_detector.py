@@ -24,7 +24,7 @@ class SignDetector:
         self.last_frame_RGB = None
         self.name = name
         self.roi = None
-        self.sign_height = -1
+        self.sign_height_m = -1
         self.avg_filter = np.ones((9,9), dtype = np.float32) * 1/81
 
         self.camera_calibration = camera_info.get_camera_params(camera_id)
@@ -91,10 +91,13 @@ class SignDetector:
         return r_hog
 
     def set_sign_height(self, height_m):
-        self.marker_height_m = height_m
+        self.sign_height_m = height_m
+
+    def get_distance_to_sign(self):
+        return self.observed_distance_to_sign
 
     def update(self, data):
-        self.observed_distance_to_sign = -1.
+        self.observed_distance_to_sign = None
         if not data[dc.IMAGE] is None:
             self.last_frame_RGB = np.copy(data[dc.IMAGE])
 
@@ -119,7 +122,7 @@ class SignDetector:
 
                     r_hog = self.compute_hog(gray, r, self.hog)
                     p_labels, p_acc, p_vals = svmutil.svm_predict([1], r_hog.transpose().tolist(), self.svm, '-b 1')
-                    print (p_vals)
+                    # print (p_vals)
                     if p_vals[0][0] > 0.5:
                         cv2.rectangle(rotated_frame, (r[0], r[1]), (r[0] + r[2], r[1] + r[3]), (255, 0, 0), 2)
                         cv2.imshow("Stage2", rotated_frame)
@@ -128,7 +131,7 @@ class SignDetector:
                             self.roi = r
 
                 if self.roi is not None:
-                    self.sign_height = self._get_sign_height(rotated_frame)
+                    self.observed_distance_to_sign = self._get_sign_height(rotated_frame)
 
 
     def _get_sign_height(self, img):
@@ -190,6 +193,7 @@ class SignDetector:
                 break
         Z = self.fy * 0.2032 / np.sum(horizontal_sum>0)
         self.observed_distance_to_sign = Z
+        return Z
         # cv2.imshow("ROI_filt", closing)
         # cv2.imshow("ROI", M.astype(np.uint8)*255)
 
