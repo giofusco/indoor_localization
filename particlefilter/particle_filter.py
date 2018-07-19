@@ -77,7 +77,6 @@ class ParticleFilter:
                                                 axis=0)
         self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
 
-
     def step(self, measurements_deltas, observations):
         # print ("Particle Filter step")
         self.move_particles_by(measurements_deltas[PF_DELTA_POS], measurements_deltas[PF_DELTA_YAW],
@@ -165,7 +164,7 @@ class ParticleFilter:
                 cnt += 1
             # d = observations[2] - d_global.min(axis=1)
             d = d_global.min(axis=1)
-            # print(d)
+            print(d)
             # d = cdist(self.particles[:, 0:2], [observations[0]], metric='euclidean')
             self.particles[self.particles[:,PF_SCORE]>=0., PF_SCORE] = (1/(1+1.5*d[self.particles[:, PF_SCORE] >= 0.])).transpose()
 
