@@ -19,7 +19,7 @@ AUTO_DETECT_STARTING_POINT = 1
 STEP_PAUSE = 1
 
 # 99S undershooting
-data_folder = './data/97S'
+data_folder = './data/P3_6'
 map_featsfile = './res/mapFeatures.yml'
 map_image = './res/Walls.png'
 walkable_image = './res/Walkable.png'

@@ -152,18 +152,22 @@ class ParticleFilter:
     def score_particles(self, observations):
         # print(observations[2])
         if observations[2] is not None:
+            start_pt = self.annotated_map.xy2uv_vectorized(self.particles[:, PF_X:PF_YAW])
             cnt = 0
             d_global = np.zeros((len(self.particles), len(self.annotated_map.map_landmarks_dict['exit_sign'])))
             for s in self.annotated_map.map_landmarks_dict['exit_sign']:
-                # print(s.position)
+                end_pt = self.annotated_map.xy2uv(s.position)
+                visible = np.zeros(len(self.particles), dtype=np.bool)
+                visible = check_visible(start_pt, end_pt, visible, self.walls_image)
                 tmp_d = np.abs(observations[2] - cdist(self.particles[:, 0:2], [s.position], metric='euclidean'))
                 d_global[:,cnt] = tmp_d.squeeze()
+                d_global[visible == 0, cnt] = 1e6
                 cnt += 1
             # d = observations[2] - d_global.min(axis=1)
             d = d_global.min(axis=1)
             # print(d)
             # d = cdist(self.particles[:, 0:2], [observations[0]], metric='euclidean')
-            self.particles[self.particles[:,PF_SCORE]>=0., PF_SCORE] = (1/(1+d[self.particles[:, PF_SCORE] >= 0.])).transpose()
+            self.particles[self.particles[:,PF_SCORE]>=0., PF_SCORE] = (1/(1+1.5*d[self.particles[:, PF_SCORE] >= 0.])).transpose()
 
     def resample_particles(self):
         tot_score = np.sum(self.particles[:, PF_SCORE])
@@ -224,3 +228,37 @@ def set_wall_hit_score(particles, uv_pt1, uv_pt2, m):
                 particles[p][3] = PF_HIT_WALL  # report hit and exit function
                 break
     return particles
+
+@jit(nopython=True)
+def check_visible(uv_pt1_list, uv_pt2, visible, map):
+    """Traversability calculation:
+    Inputs are pixel locations (r1,c1) and (r2,c2) and 2D map array.
+    Draw a line from (r1,c1) to (r2,c2) and determine whether any white (wall) pixels are hit along the way.
+    Return 1 if a wall is hit, 0 otherwise."""
+
+
+    for p in range(0, len(uv_pt1_list)):
+        visible[p] = True
+        r1 = int(uv_pt1_list[p][1])
+        c1 = int(uv_pt1_list[p][0])
+        r2 = int(uv_pt2[1])
+        c2 = int(uv_pt2[0])
+
+        dr = abs(r1 - r2)  # delta row
+        dc = abs(c1 - c2)  # delta column
+
+        span = max(dr, dc)  # if more rows than columns then loop over rows; else loop over columns
+        # span_float = span + 0.  # float version
+        if span == 0:  # i.e., special case: (r1,c1) equals (r2,c2)
+            multiplier = 0.
+        else:
+            multiplier = 1. / span
+
+        for k in range(span + 1):  # k goes from 0 through span; e.g., a span of 2 implies there are 2+1=3 pixels to reach in loop
+            frac = k * multiplier
+            r = trunc(r1 + frac * (r2 - r1))
+            c = trunc(c1 + frac * (c2 - c1))
+            if map[r, c] > 0:  # hit!
+                visible[p] = False
+                break
+    return visible
