@@ -15,7 +15,13 @@ map_feature:
 	id: exit_sign
 	position: [9.29794398093, 17.7989213349]
 	orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0]
-	normal: [-1, 0, 1, 0]
+	normal: [-1, 0]
+map_feature:
+	name: _
+	id: exit_sign
+	position: [9.29794398093, 17.7989213349]
+	orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+	normal: [1, 0]
 map_feature:
 	name: _
 	id: exit_sign

@@ -29,6 +29,7 @@ class NavigationSystem:
         self.marker_detector = marker_detector
         self.particle_filter = None
         self.visualizer = visualizer
+        self.initial_position_set = False
 
     def set_data_source(self, data_source):
         self.data_source = data_source
@@ -43,12 +44,13 @@ class NavigationSystem:
         measured_pos, measured_yaw, yaw_offset = self.observers[cnames.ODOMETRY].get_initial_measurements()
         # initialize particles
         if not uniform:
-            self.particle_filter.initialize_particles_at(measured_pos, measured_yaw, .1, 0.1)
+            self.particle_filter.initialize_particles_at(measured_pos, measured_yaw, .25, 0.1)
         else:
             self.particle_filter.initialize_particles_uniform_with_yaw(yaw_offset, .1, .1)
 
     def detect_starting_position(self):
         self.observers[cnames.ODOMETRY].set_initial_position(self.data_source, self.marker_detector)
+        self.initial_position_set = True
 
     # execute a step
     def step(self):
@@ -65,10 +67,9 @@ class NavigationSystem:
             observed_sign_distance = self.observers[cnames.EXIT_DETECTOR].get_distance_to_sign()
 
 
-            # TODO: score particles given their distance to exit sign (check compatible yaw)
-            if observed_sign_distance is not None and observed_sign_distance > 0:
-                print(observed_sign_distance)
-                print("Exit sign")
+            # if observed_sign_distance is not None and observed_sign_distance > 0:
+            #     print(observed_sign_distance)
+            #     print("Exit sign")
 
             # self.observers[cnames.EXIT_DETECTOR].update(self.current_data)
 

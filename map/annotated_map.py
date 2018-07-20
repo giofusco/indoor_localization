@@ -20,19 +20,13 @@ class AnnotatedMap:
         def set_FOV_range(self):
             if len(self.normal) == 2:
                 if (self.normal == [0, 1]).all():
-                    self.normal_angle = 180
+                    self.normal_angle = 180*math.pi/180
                 elif (self.normal == [1, 0]).all():
-                    self.normal_angle = 90
+                    self.normal_angle = 90*math.pi/180
                 elif (self.normal == [-1, 0]).all():
-                    self.normal_angle = 270
+                    self.normal_angle = 270*math.pi/180
                 else:
                     self.normal_angle = 0
-            elif len(self.normal) == 4:
-                if (self.normal == [-1, 0, 1, 0]).all():
-                    self.normal_angle = [90, 270]
-
-
-
 
     #default scale value [33.56 / 1.4859] is for SKERI building
     def __init__(self, walls_image_file, walkable_image_file, map_landmarks_file, scale=33.56 / 1.4859):
