@@ -32,6 +32,15 @@ class MarkerDetector:
         self.min_consecutive_frames = min_consecutive_frames
         self.max_marker_distance_meter = max_marker_distance_meter
         self.last_frame_RGB = None
+        self.enabled = True
+
+    def disable(self):
+        self.enabled = False
+
+    def enable(self):
+        self.enabled = True
+
+
 
     def set_marker_size(self, size_m):
         self.marker_length_m = size_m
@@ -52,7 +61,8 @@ class MarkerDetector:
 
     def update(self, data):
         self.detections = {}
-        if not data[dc.IMAGE] is None:
+
+        if not data[dc.IMAGE] is None and self.enabled:
             self.last_frame_RGB = np.copy(data[dc.IMAGE])
             img_gray = cv2.cvtColor(data[dc.IMAGE], cv2.COLOR_BGR2GRAY)
             corners, ids, _ = aruco.detectMarkers(img_gray, self.aruco_dict, parameters=self.aruco_params)
@@ -82,9 +92,9 @@ class MarkerDetector:
             else:
                 self.best_detection_id = None
                 self.num_frame_id_detection = 0
-            if self.best_detection_id is not None:
-                print(self.best_detection_id)
-                self.plot_detection(self.best_detection_id)
+            # if self.best_detection_id is not None:
+                # print(self.best_detection_id)
+                # self.plot_detection(self.best_detection_id)
 
     def _get_marker_height(self, corners):
         minY = 1e6

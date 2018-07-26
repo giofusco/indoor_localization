@@ -84,15 +84,18 @@ class ParticleFilter:
         if observations[2] is not None:
             self.score_particles(observations)
             self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
-            self.resample_particles()
+            # self.resample_particles()
             # self.tot_motion = 0.
         else:
             self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
+
         # t0 = time.time()
-            self.tot_motion += np.linalg.norm(measurements_deltas[PF_DELTA_POS], ord=2)
-            if self.tot_motion >= 1.5:
-                self.resample_particles()
-                self.tot_motion = 0.
+        self.tot_motion += np.linalg.norm(measurements_deltas[PF_DELTA_POS], ord=2)
+
+
+        if self.tot_motion >= 2. or len(self.particles)/self.num_particles < 0.1:
+            self.resample_particles()
+            self.tot_motion = 0.
         # t1 = time.time()
         # print(t1-t0)
 
@@ -141,7 +144,7 @@ class ParticleFilter:
         self.particles[:, PF_YAW] = new_yaws
 
     def score_particles(self, observations):
-        print(observations[2])
+        # print(observations[2])
         if observations[2] is not None:
             start_pt = self.annotated_map.xy2uv_vectorized(self.particles[:, PF_X:PF_YAW])
             cnt = 0
@@ -256,7 +259,7 @@ def check_visibility_line(uv_pt1_list, uv_pt2, xy_pt1_list, xy_pt2, yaws, sign_n
         #
         particle_sign_angle = np.dot((xy_pt2 - xy_pt1_list[p]) / np.linalg.norm((xy_pt2 - xy_pt1_list[p]), 1),
                                           np.array([cos(yaws[p]-pi/2), sin(yaws[p]-pi/2)]))
-        print(particle_sign_angle)
+        # print(particle_sign_angle)
         if particle_sign_angle < 0.5:
             visible[p] = False
             break

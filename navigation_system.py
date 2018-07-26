@@ -51,13 +51,13 @@ class NavigationSystem:
     def detect_starting_position(self):
         self.observers[cnames.ODOMETRY].set_initial_position(self.data_source, self.marker_detector)
         self.initial_position_set = True
+        # self.observers[cnames.MARKER_DETECTOR].disable()
 
     # execute a step
     def step(self):
         self.current_data = self.data_source.read_next(load_image=True)
 
         if not self.current_data == {}:
-
             # notify all observers that new data are available and update accordingly
             for name, observer in self.observers.items():
                 observer.update(self.current_data)
@@ -67,6 +67,7 @@ class NavigationSystem:
             observed_sign_distance = self.observers[cnames.EXIT_DETECTOR].get_distance_to_sign()
 
             # measured_pos, measured_yaw = self.observers[cnames.ODOMETRY].get_measurements()
+
             self.visualizer.show_frame(self.current_data[dconst.IMAGE])
 
             self.particle_filter.step(measurements_deltas=[measured_pos_delta, measured_yaw_delta],
