@@ -66,21 +66,8 @@ class NavigationSystem:
             observed_pos, observed_yaw = self.observers[cnames.MARKER_DETECTOR].get_observations(annotated_map=self.annotated_map)
             observed_sign_distance = self.observers[cnames.EXIT_DETECTOR].get_distance_to_sign()
 
-
-            # if observed_sign_distance is not None and observed_sign_distance > 0:
-            #     print(observed_sign_distance)
-            #     print("Exit sign")
-
-            # self.observers[cnames.EXIT_DETECTOR].update(self.current_data)
-
-
             # measured_pos, measured_yaw = self.observers[cnames.ODOMETRY].get_measurements()
             self.visualizer.show_frame(self.current_data[dconst.IMAGE])
-
-            # self.visualizer.plot_measured_position_on_map(measured_pos, self.annotated_map)
-            # if observed_pos is not None:
-            #     self.visualizer.plot_measured_position_on_map(observed_pos, self.annotated_map, color=(255,0,0))
-
 
             self.particle_filter.step(measurements_deltas=[measured_pos_delta, measured_yaw_delta],
                                       observations=[observed_pos, observed_yaw, observed_sign_distance])
@@ -89,9 +76,6 @@ class NavigationSystem:
 
         else:
             raise RuntimeError("Out of Data to process. Ending navigation system.")
-
-
-
 
     @staticmethod
     def pairwise(self, iterable):

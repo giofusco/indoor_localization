@@ -55,7 +55,7 @@ class ParticleFilter:
         self.particles = np.column_stack((sample_x, sample_y, yaws, weights))
         self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
 
-    def initialize_particles_uniform_with_yaw(self, yaw_offset, position_noise_sigma=0.5, yaw_noise_sigma=0.005):
+    def initialize_particles_uniform_with_yaw(self, yaw_offset, position_noise_sigma=0.5, yaw_noise_sigma=0.1):
         # initialize N random particles all over the walkable area
 
         n_valid_particles = 0
@@ -90,7 +90,7 @@ class ParticleFilter:
             self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
         # t0 = time.time()
             self.tot_motion += np.linalg.norm(measurements_deltas[PF_DELTA_POS], ord=2)
-            if self.tot_motion >= 0.1:
+            if self.tot_motion >= 1.5:
                 self.resample_particles()
                 self.tot_motion = 0.
         # t1 = time.time()
@@ -119,16 +119,8 @@ class ParticleFilter:
         n = rotated_delta_pos / np.linalg.norm(rotated_delta_pos, ord=2)
         n_hat = [n[1], -n[0]]
 
-        # eps1 = np.random.normal(np.linalg.norm(rotated_delta_pos, ord=2) * .5, position_noise_sigma, len(self.particles))
-        # eps2 = np.random.normal(np.linalg.norm(rotated_delta_pos, ord=2) * .02, position_noise_sigma, len(self.particles))
-
         eps1 = np.random.uniform(-np.linalg.norm(rotated_delta_pos, ord=2), np.linalg.norm(rotated_delta_pos, ord=2)*1.2, len(self.particles))
         eps2 = np.random.uniform(-np.linalg.norm(rotated_delta_pos, ord=2) * .2, np.linalg.norm(rotated_delta_pos, ord=2) * .2, len(self.particles))
-
-        # eps1 = np.random.uniform(-5., 5., len(self.particles))
-        # print(eps1)
-        # eps2 = np.random.uniform(0., 0.5, len(self.particles))
-
         noise = [eps1 * n[0], eps1 * n[1]] + [eps2 * n_hat[0], eps2 * n_hat[1]] #+ eps2 * n_hat
 
         x = self.particles[:, PF_X] + rotated_delta_pos[PF_X] + noise[PF_X]
@@ -157,7 +149,9 @@ class ParticleFilter:
             for s in self.annotated_map.map_landmarks_dict['exit_sign']:
                 end_pt = self.annotated_map.xy2uv(s.position)
                 visible = np.zeros(len(self.particles), dtype=np.bool)
-                visible = check_visibility_line(start_pt.astype(np.float64), end_pt.astype(np.float64), self.particles[:, PF_YAW], np.asarray(s.normal, dtype=np.float64), visible, self.walls_image)
+                visible = check_visibility_line(start_pt.astype(np.float64), end_pt.astype(np.float64),
+                                              self.particles[:, PF_X:PF_YAW], s.position,
+                                              self.particles[:, PF_YAW], np.asarray(s.normal, dtype=np.float64), visible, self.walls_image)
 
                 tmp_d = np.abs(observations[2] - cdist(self.particles[:, 0:2], [s.position], metric='euclidean'))
                 d_global[:,cnt] = tmp_d.squeeze()
@@ -172,7 +166,7 @@ class ParticleFilter:
     def resample_particles(self):
         tot_score = np.sum(self.particles[:, PF_SCORE])
         w = self.particles[:, PF_SCORE]
-
+        print(len(self.particles))
         if tot_score > 0:
             w /= tot_score
         idx = np.random.choice(len(w), self.num_particles, p=w)
@@ -230,7 +224,7 @@ def set_wall_hit_score(particles, uv_pt1, uv_pt2, m):
     return particles
 
 @jit(nopython=True)
-def check_visibility_line(uv_pt1_list, uv_pt2, yaws, sign_normal, visible, map):
+def check_visibility_line(uv_pt1_list, uv_pt2, xy_pt1_list, xy_pt2, yaws, sign_normal, visible, map):
     """Traversability calculation:
     Inputs are pixel locations (r1,c1) and (r2,c2) and 2D map array.
     Draw a line from (r1,c1) to (r2,c2) and determine whether any white (wall) pixels are hit along the way.
@@ -253,18 +247,20 @@ def check_visibility_line(uv_pt1_list, uv_pt2, yaws, sign_normal, visible, map):
         else:
             multiplier = 1. / span
 
+
         # check particle yaw compatible with sign orientation
         yaw_diff = np.dot(sign_normal, np.array([cos(yaws[p]-pi/2), sin(yaws[p]-pi/2)]))
         if yaw_diff > 0.:
             visible[p] = False
             break
         #
-        particle_sign_angle = np.dot((uv_pt2 - uv_pt1_list[p]) / np.linalg.norm((uv_pt2 - uv_pt1_list[p]), 2),
+        particle_sign_angle = np.dot((xy_pt2 - xy_pt1_list[p]) / np.linalg.norm((xy_pt2 - xy_pt1_list[p]), 1),
                                           np.array([cos(yaws[p]-pi/2), sin(yaws[p]-pi/2)]))
         print(particle_sign_angle)
-        # if particle_sign_angle > 0.55:
-        #     visible[p] = False
-        #     break
+        if particle_sign_angle < 0.5:
+            visible[p] = False
+            break
+
         for k in range(span + 1):  # k goes from 0 through span; e.g., a span of 2 implies there are 2+1=3 pixels to reach in loop
             frac = k * multiplier
             r = trunc(r1 + frac * (r2 - r1))

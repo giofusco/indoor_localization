@@ -74,12 +74,12 @@ class Odometry:
                                     self.current_VIO_position = np.array([current_data[dconst.CAMERA_POSITION][0],
                                                                  current_data[dconst.CAMERA_POSITION][2]])
                                     self.current_VIO_yaw = current_data[dconst.CAMERA_ROTATION][1]
-                                    self.VIO_yaw_offset =  current_data[dconst.CAMERA_ROTATION][1] - self.starting_yaw
+                                    self.VIO_yaw_offset = self.starting_yaw - current_data[dconst.CAMERA_ROTATION][1]
                                     self.current_abs_yaw = yaw_marker
-                                    print("Initial YAW: ",  yaw_marker)
+                                    print("Initial YAW: ",  yaw_marker*180/math.pi)
                             elif found is True:
                                 detection_interrupted = True
-                                yaw = np.median(observed_yaws)
+                                yaw = np.mean(observed_yaws)
                                 self.VIO_yaw_offset = yaw
                                 # print (yaw)
                     else:
@@ -95,10 +95,10 @@ class Odometry:
     # update the odometry consuming the next VIO data
     def update(self, vio_data):
         # print("***", vio_data[dconst.VIO_STATUS])
-        # if vio_data[dconst.VIO_STATUS] == 'normal' or vio_data[dconst.VIO_STATUS] == 'limited':
-        self._update_odometry(vio_data)
+        if vio_data[dconst.VIO_STATUS] == 'normal' or vio_data[dconst.VIO_STATUS] == 'limited':
+            self._update_odometry(vio_data)
         # print("YAW: ", self.current_abs_yaw)
-        self.last_processed_timestamp = vio_data[dconst.TIMESTAMP]
+            self.last_processed_timestamp = vio_data[dconst.TIMESTAMP]
 
     # private function that updates the odometry variables
     def _update_odometry(self, vio_data):
