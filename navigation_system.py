@@ -31,26 +31,38 @@ class NavigationSystem:
         self.visualizer = visualizer
         self.initial_position_set = False
 
+        self.position_filename = data_source.folder + '/positions.txt'
+
+        # create user positions file
+        fh = open(self.position_filename, "w")
+        fh.write("USER POSITION\n")
+        fh.close
+        self.position_file_handler = fh = open(self.position_filename, "a")
+
+
     def set_data_source(self, data_source):
         self.data_source = data_source
 
     def attach(self, name, observer):
         self.observers[name] = observer
 
-    def initialize(self, num_particles=1000, uniform=True):
-        self.particle_filter = ParticleFilter(self.annotated_map, num_particles=num_particles,
-                                              visualizer=self.visualizer)
+    def initialize(self, num_particles=1000, init_pos_noise=0.1, step_pos_noise_maj=0.1, step_pos_noise_min=0.1, init_yaw_noise=0.1, 
+                    step_yaw_noise=0.1, check_wall_crossing=True, uniform=True):
+        self.particle_filter = ParticleFilter(self.annotated_map, num_particles=num_particles, position_noise_maj=step_pos_noise_maj, 
+                                                position_noise_min=step_pos_noise_min, yaw_noise=step_yaw_noise,
+                                                check_wall_crossing=check_wall_crossing, visualizer=self.visualizer)
         self.detect_starting_position()
-        measured_pos, measured_yaw, yaw_offset = self.observers[cnames.ODOMETRY].get_initial_measurements()
-        # initialize particles
+        measured_pos, measured_yaw, yaw_absolute = self.observers[cnames.ODOMETRY].get_initial_measurements()
+       
         if not uniform:
-            self.particle_filter.initialize_particles_at(measured_pos, measured_yaw, .25, 0.1)
+            self.particle_filter.initialize_particles_at(measured_pos, yaw_absolute, init_pos_noise, init_yaw_noise)
         else:
-            self.particle_filter.initialize_particles_uniform_with_yaw(yaw_offset, .1, .1)
+            self.particle_filter.initialize_particles_uniform_with_yaw(yaw_absolute, init_pos_noise, init_yaw_noise)
 
     def detect_starting_position(self):
         self.observers[cnames.ODOMETRY].set_initial_position(self.data_source, self.marker_detector)
         self.initial_position_set = True
+        print("Initialization completed.")
         # self.observers[cnames.MARKER_DETECTOR].disable()
 
     # execute a step
@@ -72,8 +84,10 @@ class NavigationSystem:
 
             self.particle_filter.step(measurements_deltas=[measured_pos_delta, measured_yaw_delta],
                                       observations=[observed_pos, observed_yaw, observed_sign_distance])
-            # uv = self.annotated_map.xy2uv(self.observers[cnames.ODOMETRY].current_position)
-            # self.position_trace.append(uv)
+            
+            #uv = self.annotated_map.xy2uv(self.observers[cnames.ODOMETRY].current_position)
+            self.position_trace.append(self.particle_filter.particles[0])
+            self.position_file_handler.write(str(self.particle_filter.particles[0][0])+ "\t"+ str(self.particle_filter.particles[0][1])+"\n")
 
         else:
             raise RuntimeError("Out of Data to process. Ending navigation system.")
@@ -93,8 +107,8 @@ class NavigationSystem:
             fh.write(str(sync_Timestamp))
             fh.close
 
-    # def finish(self):
-        # self.position_file_handler.close()
+    def finish(self):
+        self.position_file_handler.close()
         # self.plot_trace()
 
 
