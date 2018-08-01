@@ -19,6 +19,7 @@ PF_SCORE = 3
 PF_DELTA_POS = 0
 PF_DELTA_YAW = 1
 
+
 class ParticleFilter:
 
     # initialize particle filter from configuration file
@@ -36,7 +37,6 @@ class ParticleFilter:
         self.yaw_offset = 0
         self.tot_motion = 0.
 
-#todo: check if particle is outside of walkable area
     def initialize_particles_at(self, pos, yaw, position_noise_sigma=0.5, yaw_noise_sigma=0.1):
         #initialize N random particles all over the walkable area
         sample_x = np.random.normal(pos[0], position_noise_sigma, self.num_particles)
@@ -78,7 +78,6 @@ class ParticleFilter:
         self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
 
     def step(self, measurements_deltas, observations):
-        # print ("Particle Filter step")
         self.move_particles_by(measurements_deltas[PF_DELTA_POS], measurements_deltas[PF_DELTA_YAW],
                                position_noise_sigma=0.2, yaw_noise_sigma=0.01)
         if observations[2] is not None:
@@ -89,15 +88,10 @@ class ParticleFilter:
         else:
             self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
 
-        # t0 = time.time()
         self.tot_motion += np.linalg.norm(measurements_deltas[PF_DELTA_POS], ord=2)
-
-
         if self.tot_motion >= 2. or len(self.particles)/self.num_particles < 0.1:
             self.resample_particles()
             self.tot_motion = 0.
-        # t1 = time.time()
-        # print(t1-t0)
 
     def remove_non_walkable_locations(self, x_vector, z_vector):
         tmp_pos = np.column_stack((x_vector, z_vector))
@@ -130,7 +124,7 @@ class ParticleFilter:
         z = self.particles[:, PF_Z] + rotated_delta_pos[PF_Z] + noise[PF_Z]
 
         dest_pt = self.annotated_map.xy2uv_vectorized(np.column_stack((x, z)))
-        new_yaws = self.particles[:, 2] + np.random.normal(0, yaw_noise_sigma, len(self.particles))
+        new_yaws = self.particles[:, PF_YAW] + np.random.normal(0, yaw_noise_sigma, len(self.particles))
 
         if check_wall_crossing:
             self.particles = set_wall_hit_score(self.particles, start_pt, dest_pt, self.walls_image)

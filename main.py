@@ -16,11 +16,11 @@ import cv2
 # import cProfile
 
 AUTO_DETECT_STARTING_POINT = 1
-STEP_PAUSE = 1
-UNIFORM = 1
+STEP_PAUSE = 1000
+UNIFORM = 0
 
 # 99S undershooting
-data_folder = './data/95S'
+data_folder = './data/87M'
 map_featsfile = './res/mapFeatures.yml'
 map_image = './res/Walls.png'
 walkable_image = './res/Walkable.png'
@@ -53,7 +53,7 @@ def main():
     # system initialization - scan for a marker to find the initial user location
     # if AUTO_DETECT_STARTING_POINT:
     # nav_system.detect_starting_position()
-    nav_system.initialize(num_particles=5000, uniform=UNIFORM)
+    nav_system.initialize(num_particles=100, uniform=UNIFORM)
     while True:
         try:
             nav_system.step()

@@ -1,13 +1,11 @@
 import input.data_constants as dconst
-
 import numpy as np
 import math
-import cv2
 
 
 class Odometry:
 
-    def __init__(self, name, annotated_map, scale_compensation_factor = 0.0):
+    def __init__(self, name, annotated_map, scale_compensation_factor=0.0):
         self.name = name
 
         self.annotated_map = annotated_map
@@ -29,10 +27,11 @@ class Odometry:
         self.previous_VIO_position = None
         self.current_VIO_yaw = None
         self.previous_VIO_yaw = None
-
+        self.VIO_yaw_offset = None
         # deltas for particles update
         self.delta_VIO_yaw = None
         self.delta_VIO_position = None
+        self.current_abs_yaw = None
 
         # difference between known initial absolute yaw (given by marker for now)
         self.yaw_offset = 0
@@ -76,11 +75,13 @@ class Odometry:
                                     self.current_VIO_yaw = current_data[dconst.CAMERA_ROTATION][1]
                                     self.VIO_yaw_offset = self.starting_yaw - current_data[dconst.CAMERA_ROTATION][1]
                                     self.current_abs_yaw = yaw_marker
-                                    print("Initial YAW: ",  yaw_marker*180/math.pi)
+
                             elif found is True:
                                 detection_interrupted = True
-                                yaw = np.mean(observed_yaws)
+                                # yaw = np.mean(observed_yaws)
+                                yaw = observed_yaws[-1]
                                 self.VIO_yaw_offset = yaw
+                                print("Initial YAW offset (theta* - phi*): ", yaw * 180 / math.pi)
                                 # print (yaw)
                     else:
                         if current_data[dconst.IMAGE] is not None:
@@ -94,10 +95,10 @@ class Odometry:
 
     # update the odometry consuming the next VIO data
     def update(self, vio_data):
-        # print("***", vio_data[dconst.VIO_STATUS])
+        print("** ", (self.starting_yaw - vio_data[dconst.CAMERA_ROTATION][1])*180/math.pi,
+              " STATUS: ", vio_data[dconst.VIO_STATUS])
         if vio_data[dconst.VIO_STATUS] == 'normal' or vio_data[dconst.VIO_STATUS] == 'limited':
             self._update_odometry(vio_data)
-        # print("YAW: ", self.current_abs_yaw)
             self.last_processed_timestamp = vio_data[dconst.TIMESTAMP]
 
     # private function that updates the odometry variables
