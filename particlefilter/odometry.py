@@ -56,8 +56,8 @@ class Odometry:
 
                             if marker_detector.best_detection_id is not None:
                                 marker_id = marker_detector.best_detection_id
-                                tvec = marker_detector.detections[marker_id]['tvec']
-                                rvec = marker_detector.detections[marker_id]['rvec']
+                                #tvec = marker_detector.detections[marker_id]['tvec']
+                                #rvec = marker_detector.detections[marker_id]['rvec']
 
                                 marker_position_XY, yaw_marker = marker_detector.get_observations(self.annotated_map)
                                 if marker_position_XY is not None:
@@ -78,7 +78,7 @@ class Odometry:
 
                             elif found is True:
                                 detection_interrupted = True
-                                # yaw = np.mean(observed_yaws)
+
                                 yaw = observed_yaws[-1]
                                 self.VIO_yaw_offset = yaw
                                 print("Initial YAW offset (theta* - phi*): ", yaw * 180 / math.pi)

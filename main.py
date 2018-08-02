@@ -15,9 +15,23 @@ import cv2
 # import numpy as np
 # import cProfile
 
-AUTO_DETECT_STARTING_POINT = 1
-STEP_PAUSE = 1000
+
+STEP_PAUSE = 1
 UNIFORM = 0
+NUM_PARTICLES = 1
+MARKER_DETECTOR_MIN_CONSEC_FRAMES = 2
+CHECK_WALL_CROSSING = 0
+INIT_POS_NOISE = 0.
+INIT_YAW_NOISE = 0.
+STEP_POS_NOISE_MAJ = 0.
+STEP_POS_NOISE_MIN = 0.
+STEP_YAW_NOISE = 0.0
+
+# INIT_POS_NOISE = 0.1
+# INIT_YAW_NOISE = 0.1
+# STEP_POS_NOISE_MAJ = 1.25
+# STEP_POS_NOISE_MIN = 0.1
+# STEP_YAW_NOISE = 0.01
 
 # 99S undershooting
 data_folder = './data/87M'
@@ -41,7 +55,7 @@ def main():
     # visualizer.plot_map_feature(annotated_map, 'exit_sign', None)
 
     sign_detector = SignDetector(components_names.EXIT_DETECTOR)
-    marker_detector = MarkerDetector(components_names.MARKER_DETECTOR, min_consecutive_frames=2)
+    marker_detector = MarkerDetector(components_names.MARKER_DETECTOR, min_consecutive_frames=MARKER_DETECTOR_MIN_CONSEC_FRAMES)
     nav_system = NavigationSystem(data_source=data_parser, annotated_map=annotated_map,
                                   marker_detector=marker_detector, visualizer=visualizer )
 
@@ -50,10 +64,9 @@ def main():
     nav_system.attach(components_names.MARKER_DETECTOR, marker_detector)
     nav_system.attach(components_names.EXIT_DETECTOR, sign_detector)
 
-    # system initialization - scan for a marker to find the initial user location
-    # if AUTO_DETECT_STARTING_POINT:
-    # nav_system.detect_starting_position()
-    nav_system.initialize(num_particles=100, uniform=UNIFORM)
+    nav_system.initialize(num_particles=NUM_PARTICLES, uniform=UNIFORM, init_pos_noise=INIT_POS_NOISE, init_yaw_noise=INIT_YAW_NOISE,
+                            step_pos_noise_maj=STEP_POS_NOISE_MAJ, step_pos_noise_min=STEP_POS_NOISE_MIN, step_yaw_noise=STEP_YAW_NOISE, 
+                            check_wall_crossing=CHECK_WALL_CROSSING)
     while True:
         try:
             nav_system.step()
@@ -63,7 +76,7 @@ def main():
         except RuntimeError:
             print ("\nDone.")
             # nav_system.save_start_marker_timestamp(data_folder=data_folder)
-            # nav_system.finish()
+            nav_system.finish()
             break
 
 if __name__ == "__main__":
