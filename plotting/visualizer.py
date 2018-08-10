@@ -96,16 +96,17 @@ class Visualizer:
         draw_map = self.draw_map.copy()
         valid_particles = particles[particles[:,3]>=0]
         score_colors = self.jets(valid_particles[:,3])*255
+        pts = annotated_map.xy2uv_vectorized(valid_particles[:,0:2])
         for p in range(len(valid_particles)):
-            cv2.circle(draw_map, tuple(annotated_map.xy2uv(valid_particles[p][0:2])), int(5*(valid_particles[p,3])),
+
+            cv2.circle(draw_map, (pts[p,1], pts[p,0]), int(5*(valid_particles[p,3])),
                        (score_colors[p,2], score_colors[p,1], score_colors[p,0]))
             # if point[3] > 0.5:
             # cv2.circle(draw_map, tuple(annotated_map.xy2uv(point[0:2])), 1, (0, 255, 0))
             # else:
             #     cv2.circle(draw_map, tuple(annotated_map.xy2uv(point[0:2])), 1, (0, 0, 255))
         cv2.imshow("Particles", draw_map)
-        # cv2.waitKey(1)
-
+        # cv2.waitKey(-1)
 
     def draw_points(self, annotated_map, points, size=3, color=(0, 0, 255), title="Points"):
         draw_map = self.draw_map.copy()

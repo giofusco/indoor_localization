@@ -1,11 +1,11 @@
-function [t, M, coord, rot, vio_status] = vio_parser(folder)
+function [t, M, coord, rot, vio_status] = vio_parser(vio_filename)
 
-dir_query_string = fullfile(folder,'*.txt');
+dir_query_string = fullfile(vio_filename);
 files = dir(dir_query_string);
 
 for f = 1 : length(files)
     filename = files(f).name;
-    fileID = fopen(fullfile(folder,filename),'r');
+    fileID = fopen(fullfile(vio_filename),'r');
 
     do_read = 1;
     matrix_line = fgetl(fileID); %skip header

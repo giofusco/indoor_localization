@@ -148,7 +148,8 @@ class MarkerDetector:
         yaw = math.atan2(line_abs[1] * marker_normal[1] + line_abs[0] * marker_normal[0],
                          line_abs[1] * marker_normal[0]
                          - line_abs[0] * marker_normal[1])
-        yaw = yaw - math.pi / 2.
+        # Alejandro convention
+        # yaw = yaw - math.pi / 2.
         position_XY = marker_position_XY + delta_XY
         yaw = (yaw + 2 * math.pi) % (2 * math.pi)
 

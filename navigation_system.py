@@ -7,6 +7,7 @@ import glob
 import itertools
 from plotting import visualizer as vis
 from particlefilter.particle_filter import ParticleFilter
+from particlefilter import particle_filter
 
 
 class NavigationSystem:
@@ -31,13 +32,13 @@ class NavigationSystem:
         self.visualizer = visualizer
         self.initial_position_set = False
 
-        self.position_filename = data_source.folder + '/positions.txt'
+        self.position_filename = data_source.folder + '/positions_87M.txt'
 
         # create user positions file
         fh = open(self.position_filename, "w")
         fh.write("USER POSITION\n")
         fh.close
-        self.position_file_handler = fh = open(self.position_filename, "a")
+        self.position_file_handler = open(self.position_filename, "a")
 
 
     def set_data_source(self, data_source):
@@ -87,7 +88,9 @@ class NavigationSystem:
             
             #uv = self.annotated_map.xy2uv(self.observers[cnames.ODOMETRY].current_position)
             self.position_trace.append(self.particle_filter.particles[0])
-            self.position_file_handler.write(str(self.particle_filter.particles[0][0])+ "\t"+ str(self.particle_filter.particles[0][1])+"\n")
+            self.position_file_handler.write(str(self.particle_filter.particles[0][particle_filter.PF_X])+ "\t"+ str(self.particle_filter.particles[0][particle_filter.PF_Z])+"\n")
+            # self.position_file_handler.write(str(measured_pos_delta[particle_filter.PF_X]) + "\t" + str(
+                # measured_pos_delta[particle_filter.PF_Z]) + "\n")
 
         else:
             raise RuntimeError("Out of Data to process. Ending navigation system.")

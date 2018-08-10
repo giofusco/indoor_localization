@@ -32,6 +32,7 @@ class Odometry:
         self.delta_VIO_yaw = None
         self.delta_VIO_position = None
         self.current_abs_yaw = None
+        self.initial_VIO_position = None
 
         # difference between known initial absolute yaw (given by marker for now)
         self.yaw_offset = 0
@@ -43,8 +44,10 @@ class Odometry:
             detection_interrupted = False
             observed_yaws = []
             # measured_yaws = []
+            cnt = 0
             while not found or not detection_interrupted:
                 current_data = data_source.read_next(load_image=True)
+                cnt += 1
                 if not current_data == {}:
                     if current_data[dconst.VIO_STATUS] == 'normal':
                         # print current_data[dconst.CAMERA_ROTATION][1]*180/math.pi
@@ -81,7 +84,8 @@ class Odometry:
 
                                 yaw = observed_yaws[-1]
                                 self.VIO_yaw_offset = yaw
-                                print("Initial YAW offset (theta* - phi*): ", yaw * 180 / math.pi)
+                                self.initial_VIO_position = self.current_VIO_position
+                                # print("Initial YAW offset (theta* - phi*): ", yaw * 180 / math.pi)
                                 # print (yaw)
                     else:
                         if current_data[dconst.IMAGE] is not None:
@@ -90,16 +94,17 @@ class Odometry:
                                 self.time_trigger_marker_seen.append(current_data[dconst.TIMESTAMP])
                 else:
                     raise ("out of data to process")
+            print("Used " + str(cnt) + " frames to initialize.")
         else:
             raise ("need a marker detector to use this marker based position initialization")
 
     # update the odometry consuming the next VIO data
     def update(self, vio_data):
-        print("** ", (self.starting_yaw - vio_data[dconst.CAMERA_ROTATION][1])*180/math.pi,
-              " STATUS: ", vio_data[dconst.VIO_STATUS])
-        if vio_data[dconst.VIO_STATUS] == 'normal' or vio_data[dconst.VIO_STATUS] == 'limited':
-            self._update_odometry(vio_data)
-            self.last_processed_timestamp = vio_data[dconst.TIMESTAMP]
+        # print("** ", (self.starting_yaw - vio_data[dconst.CAMERA_ROTATION][1])*180/math.pi,
+        #       " STATUS: ", vio_data[dconst.VIO_STATUS])
+        #if vio_data[dconst.VIO_STATUS] == 'normal' or vio_data[dconst.VIO_STATUS] == 'limited':
+        self._update_odometry(vio_data)
+        self.last_processed_timestamp = vio_data[dconst.TIMESTAMP]
 
     # private function that updates the odometry variables
     def _update_odometry(self, vio_data):
