@@ -76,15 +76,15 @@ class NavigationSystem:
                 observer.update(self.current_data)
 
             measured_pos_delta, measured_yaw_delta = self.observers[cnames.ODOMETRY].get_measurements_deltas()
-            observed_pos, observed_yaw = self.observers[cnames.MARKER_DETECTOR].get_observations(annotated_map=self.annotated_map)
-            observed_sign_distance = self.observers[cnames.EXIT_DETECTOR].get_distance_to_sign()
+            observed_pos_marker, observed_yaw_marker = self.observers[cnames.MARKER_DETECTOR].get_observations(annotated_map=self.annotated_map)
+            observed_sign_distance, observed_sign_roi = self.observers[cnames.EXIT_DETECTOR].get_sign_info()
 
             # measured_pos, measured_yaw = self.observers[cnames.ODOMETRY].get_measurements()
 
             self.visualizer.show_frame(self.current_data[dconst.IMAGE])
 
             self.particle_filter.step(measurements_deltas=[measured_pos_delta, measured_yaw_delta],
-                                      observations=[observed_pos, observed_yaw, observed_sign_distance])
+                                      observations=[observed_pos_marker, observed_yaw_marker, observed_sign_distance, observed_sign_roi])
             
             #uv = self.annotated_map.xy2uv(self.observers[cnames.ODOMETRY].current_position)
             self.position_trace.append(self.particle_filter.particles[0])

@@ -1,11 +1,8 @@
 import numpy as np
-from math import trunc, pi, cos, sin, acos
-from plotting.visualizer import Visualizer
+from math import trunc, pi, cos, sin, acos, atan2
 from numba import jit
-import time
-from random import random
-import timeit
 from scipy.spatial.distance import cdist
+import camera_info
 
 PF_HIT_WALL = -1
 PF_NOT_VALID = -2
@@ -116,13 +113,6 @@ class ParticleFilter:
         rotated_delta_pos = [ delta_pos[PF_X] * np.cos(self.particles[:,PF_YAW]) + delta_pos[PF_Z] * -np.sin(self.particles[:,PF_YAW]),
                               delta_pos[PF_X] * np.sin(self.particles[:, PF_YAW]) + delta_pos[PF_Z] * np.cos(self.particles[:, PF_YAW])]
 
-        # c, s = np.cos(self.particles[:,PF_YAW]), np.sin(self.particles[:,PF_YAW])
-        # R = np.array(((c, -s), (s, c)))
-        # rotated_delta_pos = np.dot(delta_pos, R)
-
-        # print (new_delta, rotated_delta_pos)
-        # print(np.linalg.norm(rotated_delta_pos, ord=1), np.linalg.norm(delta_pos, ord=1))
-        # print(np.linalg.norm(rotated_delta_pos, ord=2), np.linalg.norm(delta_pos, ord=2))
         n = rotated_delta_pos / np.linalg.norm(rotated_delta_pos, ord=2)
         n_hat = [n[1], -n[0]]
 
@@ -152,22 +142,26 @@ class ParticleFilter:
     def score_particles(self, observations):
         # print(observations[2])
         if observations[2] is not None:
+            app = camera_info.get_camera_angle_per_pixel()
+            print("APP:", app)
             start_pt = self.annotated_map.xy2uv_vectorized(self.particles[:, PF_X:PF_YAW])
             cnt = 0
             d_global = np.zeros((len(self.particles), len(self.annotated_map.map_landmarks_dict['exit_sign'])))
             for s in self.annotated_map.map_landmarks_dict['exit_sign']:
                 end_pt = self.annotated_map.xy2uv(s.position)
-                visible = np.zeros(len(self.particles), dtype=np.bool)
-                visible = check_visibility_line(start_pt.astype(np.float64), end_pt.astype(np.float64),
+                yaw_score = np.zeros(len(self.particles), dtype=np.float64)
+                yaw_score = check_visibility_line(start_pt.astype(np.float64), end_pt.astype(np.float64),
                                               self.particles[:, PF_X:PF_YAW].astype(np.float64), np.asarray(s.position, dtype=np.float64),
-                                              self.particles[:, PF_YAW].astype(np.float64), np.asarray(s.normal, dtype=np.float64), visible, self.walls_image)
+                                              self.particles[:, PF_YAW].astype(np.float64),
+                                              np.asarray(s.normal, dtype=np.float64), yaw_score, self.walls_image, observations[3],
+                                                  float(app))
 
                 tmp_d = np.abs(observations[2] - cdist(self.particles[:, 0:2], [s.position], metric='euclidean'))
                 d_global[:,cnt] = tmp_d.squeeze()
-                d_global[visible == 0, cnt] = 1e6
+                d_global[yaw_score == 0, cnt] = -1e6
                 cnt += 1
             # d = observations[2] - d_global.min(axis=1)
-            d = d_global.min(axis=1)
+            d = d_global.max(axis=1)
             # print(d)
             # d = cdist(self.particles[:, 0:2], [observations[0]], metric='euclidean')
             self.particles[self.particles[:,PF_SCORE]>=0., PF_SCORE] = (1/(1+1.5*d[self.particles[:, PF_SCORE] >= 0.])).transpose()
@@ -233,14 +227,14 @@ def set_wall_hit_score(particles, uv_pt1, uv_pt2, m):
     return particles
 
 @jit(nopython=True)
-def check_visibility_line(uv_pt1_list, uv_pt2, xy_pt1_list, xy_pt2, yaws, sign_normal, visible, map):
+def check_visibility_line(uv_pt1_list, uv_pt2, xy_pt1_list, xy_pt2, yaws, sign_normal, yaw_score, map, sign_roi, angle_per_pixel):
     """Traversability calculation:
     Inputs are pixel locations (r1,c1) and (r2,c2) and 2D map array.
     Draw a line from (r1,c1) to (r2,c2) and determine whether any white (wall) pixels are hit along the way.
     Return 1 if a wall is hit, 0 otherwise."""
 
     for p in range(0, len(uv_pt1_list)):
-        visible[p] = True
+        yaw_score[p] = 0
         r1 = int(uv_pt1_list[p][0])
         c1 = int(uv_pt1_list[p][1])
         r2 = int(uv_pt2[0])
@@ -260,23 +254,25 @@ def check_visibility_line(uv_pt1_list, uv_pt2, xy_pt1_list, xy_pt2, yaws, sign_n
         # check particle yaw compatible with sign orientation
         yaw_diff = np.dot(sign_normal, np.array([cos(yaws[p]), sin(yaws[p])]))
         if yaw_diff > 0.:
-            visible[p] = False
+            yaw_score[p] = 0
             break
-        #
-        # print (xy_pt1_list)
-        # print(xy_pt2)
-        particle_sign_angle = np.dot((xy_pt2 - xy_pt1_list[p]) / np.linalg.norm((xy_pt2 - xy_pt1_list[p]), 1),
-                                          np.array([cos(yaws[p]), sin(yaws[p])]))
-        # print(particle_sign_angle)
-        if particle_sign_angle < 0.5:
-            visible[p] = False
-            break
+
+        theta_pred = atan2(xy_pt2[0] - xy_pt1_list[p,0], xy_pt2[1] - xy_pt1_list[p,1])
+        column_detection = int((sign_roi[0] + sign_roi[2])/2)
+        theta_d = yaws[p] + (180 -column_detection) * angle_per_pixel
+        x = abs(sin(theta_pred - theta_d))
+        yaw_score[p] = 0.2/(0.2+x)
+        print(yaw_score[p])
+
+        # if particle_sign_angle < 0.5:
+        #     yaw_score[p] = 0
+        #     break
 
         for k in range(span + 1):  # k goes from 0 through span; e.g., a span of 2 implies there are 2+1=3 pixels to reach in loop
             frac = k * multiplier
             r = trunc(r1 + frac * (r2 - r1))
             c = trunc(c1 + frac * (c2 - c1))
             if map[r, c] > 0:  # hit!
-                visible[p] = False
+                yaw_score[p] = 0
                 break
-    return visible
+    return yaw_score

@@ -93,11 +93,13 @@ class SignDetector:
     def set_sign_height(self, height_m):
         self.sign_height_m = height_m
 
-    def get_distance_to_sign(self):
-        return self.observed_distance_to_sign
+    def get_sign_info(self):
+        return self.observed_distance_to_sign, self.roi
+
 
     def update(self, data):
         self.observed_distance_to_sign = None
+        self.roi = None
         if not data[dc.IMAGE] is None:
             self.last_frame_RGB = np.copy(data[dc.IMAGE])
 
@@ -114,8 +116,6 @@ class SignDetector:
             rois_stage1 = self.cascade_class.detectMultiScale(gray, 1.25, minNeighbors=1, minSize=(36, 24), maxSize=(180, 240))
 
             if len(rois_stage1) > 0:
-
-                self.roi = None
                 self.sign_height = -1
                 best_prob = 0
                 for r in rois_stage1:

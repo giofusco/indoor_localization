@@ -1,4 +1,5 @@
 import numpy as np
+from math import atan
 
 IPHONE8_640x360 = "iPhone8_640x480"
 IPHONE8_1280x720 = "iPhone8_1280x720"
@@ -26,3 +27,12 @@ def get_camera_params(cameraID=IPHONE8_640x360):
                                                             -1.68504587e-03, 6.04493696e+00])
 
     return camera_params
+
+def get_camera_angle_per_pixel(cameraID=IPHONE8_640x360):
+    if cameraID == IPHONE8_640x360:
+        w = 360/2
+        fx = 496.76392161
+        tan_alpha = w / fx
+        a_p_p = atan(tan_alpha)/w
+
+        return a_p_p
