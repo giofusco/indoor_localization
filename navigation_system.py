@@ -112,6 +112,7 @@ class NavigationSystem:
 
     def finish(self):
         self.position_file_handler.close()
+        self.visualizer.close_all_windows()
         # self.plot_trace()
 
 

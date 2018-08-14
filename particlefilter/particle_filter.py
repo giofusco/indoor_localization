@@ -146,25 +146,30 @@ class ParticleFilter:
             print("APP:", app)
             start_pt = self.annotated_map.xy2uv_vectorized(self.particles[:, PF_X:PF_YAW])
             cnt = 0
-            d_global = np.zeros((len(self.particles), len(self.annotated_map.map_landmarks_dict['exit_sign'])))
+            d_global = np.zeros((len(self.particles), len(self.annotated_map.map_landmarks_dict['exit_sign'])), dtype=np.float64)
+            yaw_score = np.zeros((len(self.particles), len(self.annotated_map.map_landmarks_dict['exit_sign'])), dtype=np.float64)
             for s in self.annotated_map.map_landmarks_dict['exit_sign']:
                 end_pt = self.annotated_map.xy2uv(s.position)
-                yaw_score = np.zeros(len(self.particles), dtype=np.float64)
-                yaw_score = check_visibility_line(start_pt.astype(np.float64), end_pt.astype(np.float64),
+                ys = np.zeros(len(self.particles), dtype=np.float64)
+                # yaw_score[:, cnt]\
+                ys = score_particle_yaw_to_sign(start_pt.astype(np.float64), end_pt.astype(np.float64),
                                               self.particles[:, PF_X:PF_YAW].astype(np.float64), np.asarray(s.position, dtype=np.float64),
                                               self.particles[:, PF_YAW].astype(np.float64),
-                                              np.asarray(s.normal, dtype=np.float64), yaw_score, self.walls_image, observations[3],
+                                              np.asarray(s.normal, dtype=np.float64), ys, self.walls_image, observations[3],
                                                   float(app))
-
+                yaw_score[:, cnt] = ys.squeeze()
                 tmp_d = np.abs(observations[2] - cdist(self.particles[:, 0:2], [s.position], metric='euclidean'))
                 d_global[:,cnt] = tmp_d.squeeze()
-                d_global[yaw_score == 0, cnt] = -1e6
+                d_global[ys == 0, cnt] = 1e6
                 cnt += 1
             # d = observations[2] - d_global.min(axis=1)
-            d = d_global.max(axis=1)
+            i_d = d_global.argmin(axis=1)
+            d = d_global.min(axis=1)
             # print(d)
             # d = cdist(self.particles[:, 0:2], [observations[0]], metric='euclidean')
             self.particles[self.particles[:,PF_SCORE]>=0., PF_SCORE] = (1/(1+1.5*d[self.particles[:, PF_SCORE] >= 0.])).transpose()
+            self.particles[self.particles[:, PF_SCORE] >= 0., PF_SCORE] +=yaw_score[np.arange(len(yaw_score)), i_d]
+            # print(self.particles[self.particles[:, PF_SCORE] >= 0., PF_SCORE])
 
     def resample_particles(self):
         tot_score = np.sum(self.particles[:, PF_SCORE])
@@ -227,7 +232,7 @@ def set_wall_hit_score(particles, uv_pt1, uv_pt2, m):
     return particles
 
 @jit(nopython=True)
-def check_visibility_line(uv_pt1_list, uv_pt2, xy_pt1_list, xy_pt2, yaws, sign_normal, yaw_score, map, sign_roi, angle_per_pixel):
+def score_particle_yaw_to_sign(uv_pt1_list, uv_pt2, xy_pt1_list, xy_pt2, yaws, sign_normal, yaw_score, map, sign_roi, angle_per_pixel):
     """Traversability calculation:
     Inputs are pixel locations (r1,c1) and (r2,c2) and 2D map array.
     Draw a line from (r1,c1) to (r2,c2) and determine whether any white (wall) pixels are hit along the way.
@@ -262,7 +267,7 @@ def check_visibility_line(uv_pt1_list, uv_pt2, xy_pt1_list, xy_pt2, yaws, sign_n
         theta_d = yaws[p] + (180 -column_detection) * angle_per_pixel
         x = abs(sin(theta_pred - theta_d))
         yaw_score[p] = 0.2/(0.2+x)
-        print(yaw_score[p])
+        # print(yaw_score[p])
 
         # if particle_sign_angle < 0.5:
         #     yaw_score[p] = 0

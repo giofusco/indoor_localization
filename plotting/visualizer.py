@@ -17,6 +17,10 @@ class Visualizer:
         else:
             self.draw_map = map_image.copy()
 
+    @staticmethod
+    def close_all_windows():
+        cv2.destroyAllWindows()
+
     # @staticmethod
     # def plot_yaw(image):
     #     # plot absolute VIO yaw
