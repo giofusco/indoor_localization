@@ -143,14 +143,15 @@ class MarkerDetector:
         X_line, Y_line, Z_line = MarkerDetector.convert_coors_from_camera_to_marker([0., 0., 1.], rvec, tvec)
 
         # marker_normal = np.array((marker_normal[1], marker_normal[0]), dtype=np.float64)
-        delta_XY = Z * marker_normal + np.asarray([marker_normal[1], -marker_normal[0]]) * (-X)
+        delta_XY = X * marker_normal + np.asarray([marker_normal[1], -marker_normal[0]]) * (Z)
         line_abs = [X_line - X, Z_line - Z]
 
         yaw = math.atan2(line_abs[1] * marker_normal[1] + line_abs[0] * marker_normal[0],
                          line_abs[1] * marker_normal[0]
                          - line_abs[0] * marker_normal[1])
+
         # Alejandro convention
-        # yaw = yaw - math.pi / 2.
+        #yaw = yaw - math.pi / 2.
         position_XY = marker_position_XY + delta_XY
         yaw = (yaw + 2 * math.pi) % (2 * math.pi)
 

@@ -61,7 +61,7 @@ class NavigationSystem:
             self.particle_filter.initialize_particles_uniform_with_yaw(yaw_absolute, init_pos_noise, init_yaw_noise)
 
     def detect_starting_position(self):
-        self.observers[cnames.ODOMETRY].set_initial_position(self.data_source, self.marker_detector)
+        self.observers[cnames.ODOMETRY].set_initial_position(self.data_source, self.marker_detector, verbose=True)
         self.initial_position_set = True
         print("Initialization completed.")
         # self.observers[cnames.MARKER_DETECTOR].disable()

@@ -167,7 +167,7 @@ class ParticleFilter:
             # print(d)
             # d = cdist(self.particles[:, 0:2], [observations[0]], metric='euclidean')
             self.particles[self.particles[:,PF_SCORE]>=0., PF_SCORE] = (1/(1+1.5*d[self.particles[:, PF_SCORE] >= 0.])).transpose()
-            self.particles[self.particles[:, PF_SCORE] >= 0., PF_SCORE] +=yaw_score[np.arange(len(yaw_score)), i_d]
+            self.particles[self.particles[:, PF_SCORE] >= 0., PF_SCORE] *=yaw_score[np.arange(len(yaw_score)), i_d]
             # print(self.particles[self.particles[:, PF_SCORE] >= 0., PF_SCORE])
 
     def resample_particles(self):
@@ -178,10 +178,10 @@ class ParticleFilter:
             w /= tot_score
         idx = np.random.choice(len(w), self.num_particles, p=w)
         new_particles = self.particles[idx]
-        old_scores = self.particles[idx, PF_SCORE]
+        # old_scores = self.particles[idx, PF_SCORE]
         self.particles = new_particles
-        # self.particles[:, PF_SCORE] = 1.
-        self.particles[:, PF_SCORE] = old_scores
+        self.particles[:, PF_SCORE] = 1.
+        # self.particles[:, PF_SCORE] = old_scores
 
     @staticmethod
     def __get_direction_noise(delta_pos, num_samples, sigma_pos=0.1):

@@ -37,7 +37,7 @@ class Odometry:
         # difference between known initial absolute yaw (given by marker for now)
         self.yaw_offset = 0
 
-    def set_initial_position(self, data_source, marker_detector=None, trigger_marker_id='55'):
+    def set_initial_position(self, data_source, marker_detector=None, trigger_marker_id='55', verbose=False):
         if marker_detector is not None:
             found = False
             position_XY, yaw = None, None
@@ -49,7 +49,7 @@ class Odometry:
                 current_data = data_source.read_next(load_image=True)
                 cnt += 1
                 if not current_data == {}:
-                    if current_data[dconst.VIO_STATUS] == 'normal':
+                    if current_data[dconst.VIO_STATUS] is not None: # == 'normal':
                         # print current_data[dconst.CAMERA_ROTATION][1]*180/math.pi
                         if current_data[dconst.IMAGE] is not None:
                             marker_detector.update(current_data)
@@ -64,6 +64,8 @@ class Odometry:
 
                                 marker_position_XY, yaw_marker = marker_detector.get_observations(self.annotated_map)
                                 if marker_position_XY is not None:
+                                    if verbose:
+                                        marker_detector.plot_detection()
                                     # find out what is the VIO theta_0
                                     # yaw = yaw_marker - current_data[dconst.CAMERA_ROTATION][1]
                                     found = True
