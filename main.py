@@ -16,27 +16,27 @@ import cv2
 # import cProfile
 
 
-STEP_PAUSE = 1
+STEP_PAUSE = 1000
 UNIFORM = 0
-NUM_PARTICLES = 10000
+NUM_PARTICLES = 1000
 MARKER_DETECTOR_MIN_CONSEC_FRAMES = 2
-CHECK_WALL_CROSSING = 1
+CHECK_WALL_CROSSING = 0
 
-# INIT_POS_NOISE = 0.
-# INIT_YAW_NOISE = 0.
-# STEP_POS_NOISE_MAJ = 0.
-# STEP_POS_NOISE_MIN = 0.0
-# STEP_YAW_NOISE = 0.0
+INIT_POS_NOISE = 0.
+INIT_YAW_NOISE = 0.
+STEP_POS_NOISE_MAJ = 0.
+STEP_POS_NOISE_MIN = 0.0
+STEP_YAW_NOISE = 0.0
 
-INIT_POS_NOISE = 0.1
-INIT_YAW_NOISE = 0.1
-STEP_POS_NOISE_MAJ = 1.25
-STEP_POS_NOISE_MIN = 0.1
-STEP_YAW_NOISE = 0.01
+# INIT_POS_NOISE = 0.5
+# INIT_YAW_NOISE = 0.5
+# STEP_POS_NOISE_MAJ = 1.5
+# STEP_POS_NOISE_MIN = 0.1
+# STEP_YAW_NOISE = 0.01
 
 # 99S undershooting
-data_folder = './data/P3_1'
-map_featsfile = './res/mapFeatures.yml'
+data_folder = './data/87M'
+map_featsfile = './res/mapFeatures_gio_convention.yml'
 map_image = './res/Walls.png'
 walkable_image = './res/Walkable.png'
 

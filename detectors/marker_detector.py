@@ -142,6 +142,7 @@ class MarkerDetector:
         X, Y, Z = MarkerDetector.convert_coors_from_camera_to_marker([0., 0., 0.], rvec, tvec)
         X_line, Y_line, Z_line = MarkerDetector.convert_coors_from_camera_to_marker([0., 0., 1.], rvec, tvec)
 
+        # marker_normal = np.array((marker_normal[1], marker_normal[0]), dtype=np.float64)
         delta_XY = Z * marker_normal + np.asarray([marker_normal[1], -marker_normal[0]]) * (-X)
         line_abs = [X_line - X, Z_line - Z]
 
