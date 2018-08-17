@@ -88,7 +88,7 @@ class Odometry:
                                 self.VIO_yaw_offset = yaw
                                 self.initial_VIO_position = self.current_VIO_position
                                 # print("Initial YAW offset (theta* - phi*): ", yaw * 180 / math.pi)
-                                # print (yaw)
+                                print ("THE YAW: ", yaw)
                     else:
                         if current_data[dconst.IMAGE] is not None:
                             marker_detector.update(current_data)

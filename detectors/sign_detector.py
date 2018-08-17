@@ -191,10 +191,12 @@ class SignDetector:
                 i -= 1
             else:
                 break
-        Z = self.fy * 0.2032 / (np.sum(horizontal_sum>0) + 0.001)
+        Z = self.fx * 0.2032 / (np.sum(horizontal_sum>0) + 0.001)
         self.observed_distance_to_sign = Z
+        cv2.imshow("ROI_filt", closing)
+        print(Z)
         return Z
-        # cv2.imshow("ROI_filt", closing)
+        #
         # cv2.imshow("ROI", M.astype(np.uint8)*255)
 
         # cv2.waitKey(-1)

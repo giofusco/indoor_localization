@@ -55,8 +55,8 @@ class Visualizer:
         else:
             for f in annotated_map.map_landmarks_dict[feature_id]:
                 pos = annotated_map.xy2uv(f.position)
-                cv2.circle(draw_map, tuple(pos), 1, (128, 255, 0))
-                cv2.putText(draw_map,str(f.position),tuple(pos),cv2.FONT_HERSHEY_COMPLEX_SMALL,.5, (0,255,0))
+                cv2.circle(draw_map, tuple( (pos[1], pos[0])), 1, (128, 255, 0))
+                cv2.putText(draw_map,str(f.position),tuple( (pos[1], pos[0])),cv2.FONT_HERSHEY_COMPLEX_SMALL,.5, (0,255,0))
             cv2.imshow("Locations of " + feature_id, draw_map)
             cv2.waitKey(-1)
 
