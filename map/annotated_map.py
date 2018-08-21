@@ -11,7 +11,7 @@ class AnnotatedMap:
         def __init__(self, name='', idnumber=None, position=np.zeros((2,)), orientation=np.eye(3), normal=[0, 0]):
             self.name = name
             self.id = idnumber
-            self.position = [position[1], position[0]]
+            self.position = position
             self.orientation = orientation
             self.normal = normal
             self.normal_angle = None
@@ -60,23 +60,17 @@ class AnnotatedMap:
     def get_walls_image(self):
         return self.floormap['Walls']
 
-    def xy2uv(self, pt):
+    def uv2pixels(self, pt):
         # Converts motion coordinates to coordinates in the EnvironmentMap (an image)
-        v = self.scale * pt[1]
-        u = self.mapsize_uv[0] - self.scale * pt[0]
-        return np.array([int(u), int(v)])
+        col_px = self.scale * pt[0]
+        row_px = self.mapsize_uv[0] - self.scale * pt[1]
+        return np.array([int(col_px), int(row_px)])
 
-    def xy2uv_vectorized(self, pts):
+    def uv2pixels_vectorized(self, pts):
         # Converts a list of motion coordinates to coordinates in the EnvironmentMap (an image)
-        v = np.trunc(self.scale * pts[:, 1]).astype(np.int)
-        u = np.trunc(self.mapsize_uv[0] - self.scale * pts[:, 0]).astype(np.int)
-        return np.array([u, v]).T
-
-    def uv2xy(self, pt):
-        # Converts mapp coordinates to coordinates in the real world
-        y = pt[1] / self.scale
-        x = (self.mapsize_uv[0] - pt[0]) / self.scale
-        return np.array([x, y])
+        col_px = np.trunc(self.scale * pts[:, 0]).astype(np.int)
+        row_px = np.trunc(self.mapsize_uv[0] - self.scale * pts[:, 1]).astype(np.int)
+        return np.array([col_px, row_px]).T
 
     def read_map_landmarks(self, mapfile):
         print("\nLoading map features from '{}'".format(mapfile))

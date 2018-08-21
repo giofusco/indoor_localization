@@ -137,25 +137,27 @@ class MarkerDetector:
 
     @staticmethod
     def compute_XY_position_on_marker_detection(marker_id, tvec, rvec, annotated_map):
-        marker_position_XY = annotated_map.map_landmarks_dict[marker_id][0].position
-        marker_normal = annotated_map.map_landmarks_dict[marker_id][0].normal
-        X, Y, Z = MarkerDetector.convert_coors_from_camera_to_marker([0., 0., 0.], rvec, tvec)
-        X_line, Y_line, Z_line = MarkerDetector.convert_coors_from_camera_to_marker([0., 0., 1.], rvec, tvec)
 
-        # marker_normal = np.array((marker_normal[1], marker_normal[0]), dtype=np.float64)
-        delta_XY = X * marker_normal + np.asarray([marker_normal[1], -marker_normal[0]]) * (Z)
-        line_abs = [X_line - X, Z_line - Z]
+        marker_position_uv = annotated_map.map_landmarks_dict[marker_id][0].position
+        marker_normal = np.asarray(annotated_map.map_landmarks_dict[marker_id][0].normal, dtype=np.float64)
+        marker_normal_perp = np.asarray([-marker_normal[1], marker_normal[0]], dtype=np.float64)
 
-        yaw = math.atan2(line_abs[1] * marker_normal[1] + line_abs[0] * marker_normal[0],
-                         line_abs[1] * marker_normal[0]
-                         - line_abs[0] * marker_normal[1])
+        C_camera = [0., 0., 0.]
+        D_camera = [0., 0., 1.]
+        C_marker = np.asarray(MarkerDetector.convert_coors_from_camera_to_marker(C_camera, rvec, tvec), dtype=np.float64)
+        D_marker = np.asarray(MarkerDetector.convert_coors_from_camera_to_marker(D_camera, rvec, tvec), dtype=np.float64)
+        # line of sight in marker coordinates
+        L_marker = D_marker - C_marker
+        X_line = L_marker[0]
+        Y_line = L_marker[1]
+        Z_line = L_marker[2]
+        L_map = Z_line * marker_normal + X_line * marker_normal_perp
+        theta = math.atan2(Z_line*marker_normal[1]+X_line*marker_normal[0], Z_line*marker_normal[0] - X_line * marker_normal[1])
+        delta_uv = C_marker[2]*marker_normal+C_marker[0]*marker_normal_perp
+        position_uv = marker_position_uv + delta_uv
+        yaw = (theta + 2 * math.pi) % (2 * math.pi)
 
-        # Alejandro convention
-        #yaw = yaw - math.pi / 2.
-        position_XY = marker_position_XY + delta_XY
-        yaw = (yaw + 2 * math.pi) % (2 * math.pi)
-
-        return position_XY, yaw
+        return position_uv, yaw
 
     @staticmethod
     def convert_coors_from_camera_to_marker(P, rvec, tvec):
@@ -171,4 +173,4 @@ class MarkerDetector:
         P2 = np.linalg.inv(R) * (P - t)
         X, Y, Z = P2[0, 0], P2[1, 0], P2[2, 0]
 
-        return X, Y, Z
+        return [X, Y, Z]

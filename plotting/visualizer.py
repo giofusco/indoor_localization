@@ -46,7 +46,7 @@ class Visualizer:
     #     return image
 
 
-    def plot_map_feature(self, annotated_map, feature_id, num_feature):
+    def plot_map_feature(self, annotated_map, feature_id, num_feature=None):
         draw_map = self.draw_map.copy()
         if num_feature is not None:
             pos = annotated_map.xy2uv(annotated_map.map_landmarks_dict[feature_id][num_feature].position)
@@ -54,16 +54,16 @@ class Visualizer:
             cv2.imshow("Location of " + feature_id)
         else:
             for f in annotated_map.map_landmarks_dict[feature_id]:
-                pos = annotated_map.xy2uv(f.position)
-                cv2.circle(draw_map, tuple( (pos[1], pos[0])), 1, (128, 255, 0))
-                cv2.putText(draw_map,str(f.position),tuple( (pos[1], pos[0])),cv2.FONT_HERSHEY_COMPLEX_SMALL,.5, (0,255,0))
+                pos = annotated_map.uv2pixels(f.position)
+                cv2.circle(draw_map, tuple((pos[0], pos[1])), 1, (128, 255, 0))
+                cv2.putText(draw_map,str(f.position),tuple( (pos[0], pos[1])),cv2.FONT_HERSHEY_COMPLEX_SMALL,.5, (0,255,0))
             cv2.imshow("Locations of " + feature_id, draw_map)
             cv2.waitKey(-1)
 
 
 
 
-    def plot_particle_displacement(self, annotated_map, particles, destinations_uv):
+    def plot_particle_displacement(self, annotated_map, particles, destinations_px):
         draw_map = self.draw_map.copy()
         pos = (annotated_map.xy2uv_vectorized(particles[:, 0:2]))
         # dest = annotated_map.xy2uv_vectorized(destinations_uv)
@@ -76,10 +76,10 @@ class Visualizer:
             # yaw = particles[p][2]
             # x = int(cos(yaw) * (delta_uv[0]))
             # y = int(sin(yaw) * (delta_uv[1]))
-            cv2.circle(draw_map, (destinations_uv[p][0], destinations_uv[p][1]), 2, (0, 0, 255))
+            cv2.circle(draw_map, (destinations_px[p][0], destinations_px[p][1]), 2, (0, 0, 255))
             # cv2.circle(draw_map, tuple(annotated_map.xy2uv(destinations[p][0:2])), 5, (0, 0, 255))
             # pos = tuple(annotated_map.xy2uv(destinations[p][0:2]))
-            draw_map = cv2.arrowedLine(draw_map, (pos[p][0], pos[p][1]), (destinations_uv[p][0], destinations_uv[p][1]), (0, 255, 0), 2)
+            draw_map = cv2.arrowedLine(draw_map, (pos[p][0], pos[p][1]), (destinations_px[p][0], destinations_px[p][1]), (0, 255, 0), 2)
 
         cv2.imshow("DISPLACEMENT", draw_map)
         # cv2.waitKey(10)
@@ -100,10 +100,10 @@ class Visualizer:
         draw_map = self.draw_map.copy()
         valid_particles = particles[particles[:,3]>=0]
         score_colors = self.jets(valid_particles[:,3])*255
-        pts = annotated_map.xy2uv_vectorized(valid_particles[:,0:2])
+        pts = annotated_map.uv2pixels_vectorized(valid_particles[:,0:2])
         for p in range(len(valid_particles)):
 
-            cv2.circle(draw_map, (pts[p,1], pts[p,0]), int(5*(valid_particles[p,3])),
+            cv2.circle(draw_map, (pts[p,0], pts[p,1]), int(5*(valid_particles[p,3])),
                        (score_colors[p,2], score_colors[p,1], score_colors[p,0]))
             # if point[3] > 0.5:
             # cv2.circle(draw_map, tuple(annotated_map.xy2uv(point[0:2])), 1, (0, 255, 0))

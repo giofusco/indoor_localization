@@ -49,16 +49,17 @@ class NavigationSystem:
 
     def initialize(self, num_particles=1000, init_pos_noise=0.1, step_pos_noise_maj=0.1, step_pos_noise_min=0.1, init_yaw_noise=0.1, 
                     step_yaw_noise=0.1, check_wall_crossing=True, uniform=True):
-        self.particle_filter = ParticleFilter(self.annotated_map, num_particles=num_particles, position_noise_maj=step_pos_noise_maj, 
+
+        self.particle_filter = ParticleFilter(self.annotated_map, num_particles=num_particles, position_noise_maj=step_pos_noise_maj,
                                                 position_noise_min=step_pos_noise_min, yaw_noise=step_yaw_noise,
                                                 check_wall_crossing=check_wall_crossing, visualizer=self.visualizer)
         self.detect_starting_position()
-        measured_pos, measured_yaw, yaw_absolute = self.observers[cnames.ODOMETRY].get_initial_measurements()
+        measured_pos, measured_yaw, VIO_yaw_offset = self.observers[cnames.ODOMETRY].get_initial_measurements()
        
         if not uniform:
-            self.particle_filter.initialize_particles_at(measured_pos, yaw_absolute, init_pos_noise, init_yaw_noise)
+            self.particle_filter.initialize_particles_at(measured_pos, measured_yaw, VIO_yaw_offset, init_pos_noise, init_yaw_noise)
         else:
-            self.particle_filter.initialize_particles_uniform_with_yaw(yaw_absolute, init_pos_noise, init_yaw_noise)
+            self.particle_filter.initialize_particles_uniform_with_yaw(measured_yaw, VIO_yaw_offset, init_pos_noise, init_yaw_noise)
 
     def detect_starting_position(self):
         self.observers[cnames.ODOMETRY].set_initial_position(self.data_source, self.marker_detector, verbose=True)
@@ -74,8 +75,7 @@ class NavigationSystem:
             # notify all observers that new data are available and update accordingly
             for name, observer in self.observers.items():
                 observer.update(self.current_data)
-
-            measured_pos_delta, measured_yaw_delta = self.observers[cnames.ODOMETRY].get_measurements_deltas()
+            _, measured_VIO_yaw, measured_pos_delta, _ = self.observers[cnames.ODOMETRY].get_measurements_and_deltas()
             observed_pos_marker, observed_yaw_marker = self.observers[cnames.MARKER_DETECTOR].get_observations(annotated_map=self.annotated_map)
             observed_sign_distance, observed_sign_roi = self.observers[cnames.EXIT_DETECTOR].get_sign_info()
 
@@ -83,7 +83,7 @@ class NavigationSystem:
 
             self.visualizer.show_frame(self.current_data[dconst.IMAGE])
 
-            self.particle_filter.step(measurements_deltas=[measured_pos_delta, measured_yaw_delta],
+            self.particle_filter.step(measurements=[None, measured_VIO_yaw, measured_pos_delta, None],
                                       observations=[observed_pos_marker, observed_yaw_marker, observed_sign_distance, observed_sign_roi])
             
             #uv = self.annotated_map.xy2uv(self.observers[cnames.ODOMETRY].current_position)

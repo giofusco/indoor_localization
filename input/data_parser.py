@@ -41,7 +41,9 @@ class DataParser:
                 data = self._parse(lines)
                 data[dc.FOLDER] = self.folder
                 if load_image:
-                    data[dc.IMAGE] = cv2.imread(data[dc.IMAGE_FILENAME])
+                    img = cv2.imread(data[dc.IMAGE_FILENAME])
+                    img = cv2.resize(img, (360, 640), img)
+                    data[dc.IMAGE] = img # cv2.imread(data[dc.IMAGE_FILENAME])
                 return data
             else:
                 return {}

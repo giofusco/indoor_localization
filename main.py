@@ -16,26 +16,26 @@ import cv2
 # import cProfile
 
 
-STEP_PAUSE = 1
+STEP_PAUSE = -1
 UNIFORM = 0
-NUM_PARTICLES = 10000
+NUM_PARTICLES = 1
 MARKER_DETECTOR_MIN_CONSEC_FRAMES = 2
-CHECK_WALL_CROSSING = 1
+CHECK_WALL_CROSSING = 0
 
-# INIT_POS_NOISE = 0.
-# INIT_YAW_NOISE = 0.
-# STEP_POS_NOISE_MAJ = 0.
-# STEP_POS_NOISE_MIN = 0.0
-# STEP_YAW_NOISE = 0.0
-
-INIT_POS_NOISE = 0.75
-INIT_YAW_NOISE = 0.05
-STEP_POS_NOISE_MAJ = 1.5
-STEP_POS_NOISE_MIN = 0.75
-STEP_YAW_NOISE = 0.01
+INIT_POS_NOISE = 0.
+INIT_YAW_NOISE = 0.
+STEP_POS_NOISE_MAJ = 0.
+STEP_POS_NOISE_MIN = 0.0
+STEP_YAW_NOISE = 0.0
+#
+# INIT_POS_NOISE = 0.5
+# INIT_YAW_NOISE = 0.0
+# STEP_POS_NOISE_MAJ = 1.25
+# STEP_POS_NOISE_MIN = 0.75
+# STEP_YAW_NOISE = 0.05
 
 # 99S undershooting
-data_folder = './data/P2_2'
+data_folder = './data/87M'
 map_featsfile = './res/mapFeatures.yml'
 map_image = './res/Walls.png'
 walkable_image = './res/Walkable.png'
@@ -53,7 +53,7 @@ def main():
 
     annotated_map = AnnotatedMap(map_image, walkable_image, map_featsfile)
     visualizer = Visualizer(annotated_map.get_walls_image())
-    #visualizer.plot_map_feature(annotated_map, 'exit_sign', None)
+    # visualizer.plot_map_feature(annotated_map, 'exit_sign', None)
 
     sign_detector = SignDetector(components_names.EXIT_DETECTOR)
     marker_detector = MarkerDetector(components_names.MARKER_DETECTOR, min_consecutive_frames=MARKER_DETECTOR_MIN_CONSEC_FRAMES)
@@ -73,6 +73,7 @@ def main():
             nav_system.step()
             key = cv2.waitKey(STEP_PAUSE)
             if key == 27:
+                nav_system.finish()
                 break
         except RuntimeError:
             print ("\nDone.")

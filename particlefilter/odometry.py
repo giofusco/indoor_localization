@@ -49,7 +49,7 @@ class Odometry:
                 current_data = data_source.read_next(load_image=True)
                 cnt += 1
                 if not current_data == {}:
-                    if current_data[dconst.VIO_STATUS] is not None: # == 'normal':
+                    if current_data[dconst.VIO_STATUS] == 'normal':
                         # print current_data[dconst.CAMERA_ROTATION][1]*180/math.pi
                         if current_data[dconst.IMAGE] is not None:
                             marker_detector.update(current_data)
@@ -63,9 +63,12 @@ class Odometry:
                                 #rvec = marker_detector.detections[marker_id]['rvec']
 
                                 marker_position_XY, yaw_marker = marker_detector.get_observations(self.annotated_map)
+
                                 if marker_position_XY is not None:
                                     if verbose:
                                         marker_detector.plot_detection()
+                                        print("Marker Yaw = ", yaw_marker*180/math.pi)
+                                        print("VIO Yaw = ", current_data[dconst.CAMERA_ROTATION][1]*180/math.pi)
                                     # find out what is the VIO theta_0
                                     # yaw = yaw_marker - current_data[dconst.CAMERA_ROTATION][1]
                                     found = True
@@ -78,17 +81,16 @@ class Odometry:
                                     self.current_VIO_position = np.array([current_data[dconst.CAMERA_POSITION][0],
                                                                  current_data[dconst.CAMERA_POSITION][2]])
                                     self.current_VIO_yaw = current_data[dconst.CAMERA_ROTATION][1]
-                                    self.VIO_yaw_offset = self.starting_yaw - current_data[dconst.CAMERA_ROTATION][1]
+                                    self.VIO_yaw_offset = current_data[dconst.CAMERA_ROTATION][1] - yaw_marker
                                     self.current_abs_yaw = yaw_marker
 
                             elif found is True:
                                 detection_interrupted = True
 
-                                yaw = observed_yaws[-1]
-                                self.VIO_yaw_offset = yaw
                                 self.initial_VIO_position = self.current_VIO_position
-                                # print("Initial YAW offset (theta* - phi*): ", yaw * 180 / math.pi)
-                                print ("THE YAW: ", yaw)
+                                print("VIO Yaw: ", self.current_VIO_yaw*180./math.pi)
+                                print("Initial YAW offset (theta* - phi*): ", self.VIO_yaw_offset * 180 / math.pi)
+                                print ("MARKER YAW: ", self.starting_yaw * 180/math.pi)
                     else:
                         if current_data[dconst.IMAGE] is not None:
                             marker_detector.update(current_data)
@@ -102,8 +104,6 @@ class Odometry:
 
     # update the odometry consuming the next VIO data
     def update(self, vio_data):
-        # print("** ", (self.starting_yaw - vio_data[dconst.CAMERA_ROTATION][1])*180/math.pi,
-        #       " STATUS: ", vio_data[dconst.VIO_STATUS])
         #if vio_data[dconst.VIO_STATUS] == 'normal' or vio_data[dconst.VIO_STATUS] == 'limited':
         self._update_odometry(vio_data)
         self.last_processed_timestamp = vio_data[dconst.TIMESTAMP]
@@ -116,16 +116,17 @@ class Odometry:
         self.current_VIO_yaw = vio_data[dconst.CAMERA_ROTATION][1]
         self.current_VIO_position = np.array([vio_data[dconst.CAMERA_POSITION][0], vio_data[dconst.CAMERA_POSITION][2]])
         self.delta_VIO_yaw = self.current_VIO_yaw - self.previous_VIO_yaw
-        self.delta_VIO_position = self.current_VIO_position - self.previous_VIO_position
+        self.delta_VIO_position = self.previous_VIO_position - self.current_VIO_position
         self.current_abs_yaw += self.delta_VIO_yaw
+        print("VIO Pos: ",  self.current_VIO_position)
 
     #returns raw VIO measurements
     def get_measurements(self):
         return self.current_VIO_position, self.current_VIO_yaw
 
     # returns change in VIO position and yaw
-    def get_measurements_deltas(self):
-        return self.delta_VIO_position, self.delta_VIO_yaw
+    def get_measurements_and_deltas(self):
+        return self.current_VIO_position, self.current_VIO_yaw, self.delta_VIO_position, self.delta_VIO_yaw
 
     # returns the initial position and yaw measured when looking for a marker in the beginning
     def get_initial_measurements(self):
