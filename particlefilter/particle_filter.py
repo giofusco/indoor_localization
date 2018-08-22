@@ -55,7 +55,7 @@ class ParticleFilter:
         #initialize N random particles all over the walkable area
         sample_x = np.random.normal(pos[0], position_noise_sigma, self.num_particles)
         sample_z = np.random.normal(pos[1], position_noise_sigma, self.num_particles)
-        self.yaw_offset = yaw_offset
+        self.yaw_offset = -yaw_offset
         yaws = global_yaw * np.ones((self.num_particles,1), dtype=np.float64)
         weights = np.ones((self.num_particles))
         self.particles = np.column_stack((sample_x, sample_z, yaws, weights))
@@ -74,7 +74,7 @@ class ParticleFilter:
     def initialize_particles_uniform_with_yaw(self, global_yaw, yaw_offset, position_noise_sigma=0.5, yaw_noise_sigma=0.1):
         # initialize N random particles all over the walkable area
 
-        self.yaw_offset = yaw_offset
+        self.yaw_offset = -yaw_offset
         n_valid_particles = 0
         num_samples = self.num_particles
         yaw_offsets = global_yaw * np.ones(self.num_particles,1)
@@ -99,7 +99,7 @@ class ParticleFilter:
         self.move_particles_by(measurements[PF_DELTA_POS], measurements[PF_VIO_YAW],
                                self.check_wall_crossing)
         if observations[2] is not None:
-            self.score_particles(observations)
+            #self.score_particles(observations)
             self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
             #self.resample_particles()
             # self.tot_motion = 0.

@@ -69,6 +69,7 @@ class Odometry:
                                         marker_detector.plot_detection()
                                         print("Marker Yaw = ", yaw_marker*180/math.pi)
                                         print("VIO Yaw = ", current_data[dconst.CAMERA_ROTATION][1]*180/math.pi)
+
                                     # find out what is the VIO theta_0
                                     # yaw = yaw_marker - current_data[dconst.CAMERA_ROTATION][1]
                                     found = True
@@ -116,7 +117,7 @@ class Odometry:
         self.current_VIO_yaw = vio_data[dconst.CAMERA_ROTATION][1]
         self.current_VIO_position = np.array([vio_data[dconst.CAMERA_POSITION][0], vio_data[dconst.CAMERA_POSITION][2]])
         self.delta_VIO_yaw = self.current_VIO_yaw - self.previous_VIO_yaw
-        self.delta_VIO_position = self.previous_VIO_position - self.current_VIO_position
+        self.delta_VIO_position = self.current_VIO_position - self.previous_VIO_position
         self.current_abs_yaw += self.delta_VIO_yaw
         print("VIO Pos: ",  self.current_VIO_position)
 

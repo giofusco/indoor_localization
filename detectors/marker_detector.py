@@ -133,7 +133,7 @@ class MarkerDetector:
         cv2.circle(self.last_frame_RGB, tuple(corners[0][3]), 1, (0, 0, 255), -1)
 
         cv2.imshow(DETECTION_WINDOW_NAME, self.last_frame_RGB)
-        # cv2.waitKey(-1)
+        cv2.waitKey(1)
 
     @staticmethod
     def compute_XY_position_on_marker_detection(marker_id, tvec, rvec, annotated_map):

@@ -101,10 +101,16 @@ class Visualizer:
         valid_particles = particles[particles[:,3]>=0]
         score_colors = self.jets(valid_particles[:,3])*255
         pts = annotated_map.uv2pixels_vectorized(valid_particles[:,0:2])
+        yaw_uv = valid_particles[:,0:2] + [int(cos(valid_particles[:,2])*1.5), int(sin(valid_particles[:,2])*1.5)]
+        yaw_pts = annotated_map.uv2pixels_vectorized(yaw_uv)
+
         for p in range(len(valid_particles)):
 
             cv2.circle(draw_map, (pts[p,0], pts[p,1]), int(5*(valid_particles[p,3])),
                        (score_colors[p,2], score_colors[p,1], score_colors[p,0]))
+
+            draw_map = cv2.arrowedLine(draw_map, (pts[p,0], pts[p,1]), (yaw_pts[p,0], yaw_pts[p,1]), (0,255,0), 2)
+
             # if point[3] > 0.5:
             # cv2.circle(draw_map, tuple(annotated_map.xy2uv(point[0:2])), 1, (0, 255, 0))
             # else:

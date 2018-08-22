@@ -89,8 +89,9 @@ class NavigationSystem:
             #uv = self.annotated_map.xy2uv(self.observers[cnames.ODOMETRY].current_position)
             self.position_trace.append(self.particle_filter.particles[0])
             self.position_file_handler.write(str(self.particle_filter.particles[0][particle_filter.PF_X])+ "\t"+ str(self.particle_filter.particles[0][particle_filter.PF_Z])+"\n")
-            # self.position_file_handler.write(str(measured_pos_delta[particle_filter.PF_X]) + "\t" + str(
-                # measured_pos_delta[particle_filter.PF_Z]) + "\n")
+            self.position_file_handler.write(str(measured_pos_delta[particle_filter.PF_X]) + "\t" + str(
+                 measured_pos_delta[particle_filter.PF_Z]) + "\n")
+            self.position_file_handler.write(str(measured_VIO_yaw) + "\t" + str(self.particle_filter.particles[:, 2]) + "\n")
 
         else:
             raise RuntimeError("Out of Data to process. Ending navigation system.")
