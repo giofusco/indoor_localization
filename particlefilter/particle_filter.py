@@ -55,7 +55,7 @@ class ParticleFilter:
         #initialize N random particles all over the walkable area
         sample_x = np.random.normal(pos[0], position_noise_sigma, self.num_particles)
         sample_z = np.random.normal(pos[1], position_noise_sigma, self.num_particles)
-        self.yaw_offset = -yaw_offset
+        self.yaw_offset = yaw_offset + pi/2
         yaws = global_yaw * np.ones((self.num_particles,1), dtype=np.float64)
         weights = np.ones((self.num_particles))
         self.particles = np.column_stack((sample_x, sample_z, yaws, weights))
@@ -74,7 +74,7 @@ class ParticleFilter:
     def initialize_particles_uniform_with_yaw(self, global_yaw, yaw_offset, position_noise_sigma=0.5, yaw_noise_sigma=0.1):
         # initialize N random particles all over the walkable area
 
-        self.yaw_offset = -yaw_offset
+        self.yaw_offset = yaw_offset - pi/2
         n_valid_particles = 0
         num_samples = self.num_particles
         yaw_offsets = global_yaw * np.ones(self.num_particles,1)
@@ -127,8 +127,8 @@ class ParticleFilter:
         start_pt = (self.annotated_map.uv2pixels_vectorized(self.particles[:, PF_X:PF_YAW]))
 
 
-        rotated_delta_pos = [delta_pos[PF_X] * np.cos(self.yaw_offset) + delta_pos[PF_Z] * -np.sin(self.yaw_offset),
-                              delta_pos[PF_X] * np.sin(self.yaw_offset) + delta_pos[PF_Z] * np.cos(self.yaw_offset)]
+        rotated_delta_pos = [ delta_pos[PF_X] * np.cos(self.yaw_offset) + -delta_pos[PF_Z] * np.sin(self.yaw_offset),
+                              delta_pos[PF_X] * -np.sin(self.yaw_offset) + -delta_pos[PF_Z] * np.cos(self.yaw_offset)]
 
         n = rotated_delta_pos / np.linalg.norm(rotated_delta_pos, ord=2)
         n_hat = [n[1], -n[0]]
@@ -147,19 +147,19 @@ class ParticleFilter:
         dest_pt = self.annotated_map.uv2pixels_vectorized(np.column_stack((x, z)))
         # print("DELTA YAW: ", delta_yaw)
         # new_yaws = self.particles[:, PF_YAW] + np.random.normal(0, self.yaw_noise, len(self.particles))
-        new_yaws = self.yaw_offset + np.random.normal(0, self.yaw_noise, len(self.particles))
+        # new_yaws = self.yaw_offset - + np.random.normal(0, self.yaw_noise, len(self.particles))
 
         if check_wall_crossing:
             self.particles = set_wall_hit_score(self.particles, start_pt, dest_pt, self.walls_image)
             x = x[self.particles[:, PF_SCORE] >= 0]
             z = z[self.particles[:, PF_SCORE] >= 0]
-            new_yaws = new_yaws[self.particles[:, PF_SCORE] >= 0]
+            # new_yaws = new_yaws[self.particles[:, PF_SCORE] >= 0]
             self.particles = self.particles[self.particles[:, PF_SCORE] >= 0]
 
         self.particles[:, PF_X] = x
         self.particles[:, PF_Z] = z
         # self.particles[:, PF_YAW] = new_yaws
-        self.particles[:, PF_YAW] = vio_yaw + self.yaw_offset #+ np.random.normal(0, self.yaw_noise, len(self.particles))
+        self.particles[:, PF_YAW] = vio_yaw + self.yaw_offset - pi/2 #+ np.random.normal(0, self.yaw_noise, len(self.particles))
         print(self.particles)
 
     def score_particles(self, observations):

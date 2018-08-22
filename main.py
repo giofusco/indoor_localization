@@ -16,7 +16,7 @@ import cv2
 # import cProfile
 
 
-STEP_PAUSE = 1
+STEP_PAUSE = 30
 UNIFORM = 0
 NUM_PARTICLES = 1
 MARKER_DETECTOR_MIN_CONSEC_FRAMES = 2
@@ -35,7 +35,7 @@ STEP_YAW_NOISE = 0.0
 # STEP_YAW_NOISE = 0.05
 
 # 99S undershooting
-data_folder = './data/P2_1'
+data_folder = './data/P2_7'
 map_featsfile = './res/mapFeatures.yml'
 map_image = './res/Walls.png'
 walkable_image = './res/Walkable.png'
@@ -79,7 +79,7 @@ def main():
             print ("\nDone.")
             # nav_system.save_start_marker_timestamp(data_folder=data_folder)
             nav_system.finish()
-            break
+            return 0
 
 if __name__ == "__main__":
     main()
