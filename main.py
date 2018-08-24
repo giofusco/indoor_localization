@@ -16,11 +16,11 @@ import cv2
 # import cProfile
 
 
-STEP_PAUSE = 30
+STEP_PAUSE = 1
 UNIFORM = 0
-NUM_PARTICLES = 1
+NUM_PARTICLES = 1000
 MARKER_DETECTOR_MIN_CONSEC_FRAMES = 2
-CHECK_WALL_CROSSING = 0
+CHECK_WALL_CROSSING = 1
 
 INIT_POS_NOISE = 0.
 INIT_YAW_NOISE = 0.
@@ -28,14 +28,14 @@ STEP_POS_NOISE_MAJ = 0.
 STEP_POS_NOISE_MIN = 0.0
 STEP_YAW_NOISE = 0.0
 #
-# INIT_POS_NOISE = 0.5
+INIT_POS_NOISE = 0.5
 # INIT_YAW_NOISE = 0.0
-# STEP_POS_NOISE_MAJ = 1.25
+STEP_POS_NOISE_MAJ = 1.25
 # STEP_POS_NOISE_MIN = 0.75
 # STEP_YAW_NOISE = 0.05
 
 # 99S undershooting
-data_folder = './data/P2_7'
+data_folder = './data/130'
 map_featsfile = './res/mapFeatures.yml'
 map_image = './res/Walls.png'
 walkable_image = './res/Walkable.png'

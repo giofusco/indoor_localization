@@ -156,17 +156,17 @@ class ParticleFilter:
             # new_yaws = new_yaws[self.particles[:, PF_SCORE] >= 0]
             self.particles = self.particles[self.particles[:, PF_SCORE] >= 0]
 
-        self.particles[:, PF_X] = x
-        self.particles[:, PF_Z] = z
+        self.particles[:, PF_X] = x + 0.
+        self.particles[:, PF_Z] = z + 0.
         # self.particles[:, PF_YAW] = new_yaws
-        self.particles[:, PF_YAW] = vio_yaw + self.yaw_offset - pi/2 #+ np.random.normal(0, self.yaw_noise, len(self.particles))
-        print(self.particles)
+        self.particles[:, PF_YAW] = vio_yaw + self.yaw_offset - pi/2 + 0. + np.random.normal(0, self.yaw_noise, len(self.particles))
+        # print(self.particles)
 
     def score_particles(self, observations):
         # print(observations[2])
         if observations[2] is not None:
             app = camera_info.get_camera_angle_per_pixel()
-            print("APP:", app)
+            # print("APP:", app)
             start_pt = self.annotated_map.uv2pixels_vectorized(self.particles[:, PF_X:PF_YAW])
             cnt = 0
             d_global = np.zeros((len(self.particles), len(self.annotated_map.map_landmarks_dict['exit_sign'])), dtype=np.float64)

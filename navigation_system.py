@@ -32,7 +32,7 @@ class NavigationSystem:
         self.visualizer = visualizer
         self.initial_position_set = False
 
-        self.position_filename = data_source.folder + '/positions_87M.txt'
+        self.position_filename = data_source.folder + '/data_log.txt'
 
         # create user positions file
         fh = open(self.position_filename, "w")
@@ -75,7 +75,7 @@ class NavigationSystem:
             # notify all observers that new data are available and update accordingly
             for name, observer in self.observers.items():
                 observer.update(self.current_data)
-            _, measured_VIO_yaw, measured_pos_delta, _ = self.observers[cnames.ODOMETRY].get_measurements_and_deltas()
+            VIO_pos, measured_VIO_yaw, measured_pos_delta, _ = self.observers[cnames.ODOMETRY].get_measurements_and_deltas()
             observed_pos_marker, observed_yaw_marker = self.observers[cnames.MARKER_DETECTOR].get_observations(annotated_map=self.annotated_map)
             observed_sign_distance, observed_sign_roi = self.observers[cnames.EXIT_DETECTOR].get_sign_info()
 
@@ -85,13 +85,22 @@ class NavigationSystem:
 
             self.particle_filter.step(measurements=[None, measured_VIO_yaw, measured_pos_delta, None],
                                       observations=[observed_pos_marker, observed_yaw_marker, observed_sign_distance, observed_sign_roi])
-            
+
             #uv = self.annotated_map.xy2uv(self.observers[cnames.ODOMETRY].current_position)
-            self.position_trace.append(self.particle_filter.particles[0])
-            self.position_file_handler.write(str(self.particle_filter.particles[0][particle_filter.PF_X])+ "\t"+ str(self.particle_filter.particles[0][particle_filter.PF_Z])+"\n")
-            self.position_file_handler.write(str(measured_pos_delta[particle_filter.PF_X]) + "\t" + str(
-                 measured_pos_delta[particle_filter.PF_Z]) + "\n")
-            self.position_file_handler.write(str(measured_VIO_yaw) + "\t" + str(self.particle_filter.particles[:, 2]) + "\n")
+
+            # VIO_Theta, VIO_X, VIO_Z, Marker_Theta, MARKER_X, MARKER_Z
+
+            self.position_trace.append(self.particle_filter.particles[0, 0:2] + [0., 0.])
+            self.position_file_handler.write(str(measured_VIO_yaw)+ ',' + str(VIO_pos[particle_filter.PF_X]) + ',' +
+                                             str(VIO_pos[particle_filter.PF_Z]) + ',' +
+                                             str(self.observers[cnames.ODOMETRY].starting_yaw - math.pi/2) + ',' +
+                                             str(self.observers[cnames.ODOMETRY].starting_position[0]) + ',' +
+                                             str(self.observers[cnames.ODOMETRY].starting_position[1]) + '\n')
+
+            # self.position_file_handler.write(str(self.particle_filter.particles[0][particle_filter.PF_X])+ "\t"+ str(self.particle_filter.particles[0][particle_filter.PF_Z])+"\n")
+            # self.position_file_handler.write(str(measured_pos_delta[particle_filter.PF_X]) + "\t" + str(
+            #      measured_pos_delta[particle_filter.PF_Z]) + "\n")
+            # self.position_file_handler.write(str(measured_VIO_yaw) + "\t" + str(self.particle_filter.particles[:, 2]) + "\n")
 
         else:
             raise RuntimeError("Out of Data to process. Ending navigation system.")
@@ -114,6 +123,7 @@ class NavigationSystem:
     def finish(self):
         self.position_file_handler.close()
         self.visualizer.close_all_windows()
-        # self.plot_trace()
+        self.visualizer.plot_trace(self.data_source, self.annotated_map, self.position_trace)
+
 
 

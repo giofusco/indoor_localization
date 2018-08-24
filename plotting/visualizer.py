@@ -101,15 +101,15 @@ class Visualizer:
         valid_particles = particles[particles[:,3]>=0]
         score_colors = self.jets(valid_particles[:,3])*255
         pts = annotated_map.uv2pixels_vectorized(valid_particles[:,0:2])
-        yaw_uv = valid_particles[:,0:2] + [int(cos(valid_particles[:,2])*1.5), int(sin(valid_particles[:,2])*1.5)]
-        yaw_pts = annotated_map.uv2pixels_vectorized(yaw_uv)
+#        yaw_uv = valid_particles[:,0:2] + [int(cos(valid_particles[:,2])*1.5), int(sin(valid_particles[:,2])*1.5)]
+#         yaw_pts = annotated_map.uv2pixels_vectorized(yaw_uv)
 
         for p in range(len(valid_particles)):
 
             cv2.circle(draw_map, (pts[p,0], pts[p,1]), int(5*(valid_particles[p,3])),
                        (score_colors[p,2], score_colors[p,1], score_colors[p,0]))
 
-            draw_map = cv2.arrowedLine(draw_map, (pts[p,0], pts[p,1]), (yaw_pts[p,0], yaw_pts[p,1]), (0,255,0), 2)
+            #draw_map = cv2.arrowedLine(draw_map, (pts[p,0], pts[p,1]), (yaw_pts[p,0], yaw_pts[p,1]), (0,255,0), 2)
 
             # if point[3] > 0.5:
             # cv2.circle(draw_map, tuple(annotated_map.xy2uv(point[0:2])), 1, (0, 255, 0))
@@ -149,21 +149,25 @@ class Visualizer:
 
 
 
-# def plot_trace(self):
-#     wall_map = self.map_data.get_walls_image()
-#     wall_map =255 - (wall_map)
-#     if wall_map.shape[2] <3:
-#         wall_map = cv2.cvtColor(wall_map, cv2.COLOR_GRAY2RGB)
-#
-#     marker_points = self.observers[cnames.ODOMETRY].marker_detection_locations
-#     # for p1, p2 in self.pairwise(self.position_trace):
-#         # wall_map = cv2.line(wall_map, tuple(p1), tuple(p2), (0, 0, 255), 3)
-#         # wall_map = cv2.circle(wall_map, tuple(p1), 5, (0, 0, 255), 1)
-#         # wall_map = cv2.circle(wall_map, tuple(p2), 5, (0, 0, 255), 1)
-#     for p in marker_points:
-#         # p = ((int(p[0]), int(p[1])))
-#         p = self.map_data.env_map.xy2uv(p)
-#         wall_map = cv2.circle(wall_map, tuple(p), 6, (0, 0, 255), 2)
-#     cv2.imshow("Trace", wall_map)
-#     cv2.imwrite(self.data_source.folder +"/trajectory.png", wall_map)
-#     cv2.waitKey(-1)
+    def plot_trace(self, data_source, annotated_map, trace):
+        wall_map = self.draw_map.copy()
+        wall_map =255 - (wall_map)
+        if wall_map.shape[2] <3:
+            wall_map = cv2.cvtColor(wall_map, cv2.COLOR_GRAY2RGB)
+
+
+        for p in range(0, len(trace)):
+            cv2.circle(wall_map, tuple(annotated_map.uv2pixels(trace[p][0:2])), int(5), (0,0,255))
+
+        #marker_points = self.observers[cnames.ODOMETRY].marker_detection_locations
+        # for p1, p2 in self.pairwise(self.position_trace):
+        #     print (p1)
+            # wall_map = cv2.line(wall_map, tuple(p1), tuple(p2), (0, 0, 255), 3)
+            # wall_map = cv2.circle(wall_map, tuple(p1), 5, (0, 0, 255), 1)
+            # wall_map = cv2.circle(wall_map, tuple(p2), 5, (0, 0, 255), 1)
+        #for p in marker_points:
+            # p = ((int(p[0]), int(p[1])))
+          #  p = self.map_data.env_map.xy2uv(p)
+           # wall_map = cv2.circle(wall_map, tuple(p), 6, (0, 0, 255), 2)
+        cv2.imshow("Trace", wall_map)
+        cv2.imwrite(data_source.folder +"/trajectory.png", wall_map)
