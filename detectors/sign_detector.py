@@ -37,6 +37,9 @@ class SignDetector:
         self.fy = self.camera_matrix[1][0,1]
         self.observed_distance_to_sign = -1.
 
+        self.consecutive_detections = 0
+
+
 
     def get_observation(self, data):
         # self.observed_distance_to_sign = -1.
@@ -118,19 +121,25 @@ class SignDetector:
             if len(rois_stage1) > 0:
                 self.sign_height = -1
                 best_prob = 0
+                count_detected = 0
                 for r in rois_stage1:
 
                     r_hog = self.compute_hog(gray, r, self.hog)
                     p_labels, p_acc, p_vals = svmutil.svm_predict([1], r_hog.transpose().tolist(), self.svm, '-b 1')
-                    # print (p_vals)
+                    print (p_vals)
                     if p_vals[0][0] > 0.5:
+                        count_detected = 1
                         cv2.rectangle(rotated_frame, (r[0], r[1]), (r[0] + r[2], r[1] + r[3]), (255, 0, 0), 2)
                         cv2.imshow("Stage2", rotated_frame)
                         if p_vals[0][0] > best_prob:
                             best_prob = p_vals[0][0]
                             self.roi = r
-
-                if self.roi is not None:
+                if count_detected == 1:
+                    self.consecutive_detections +=1
+                else:
+                    self.consecutive_detections = 0
+                if self.roi is not None and self.consecutive_detections >= 0:
+                    print("Consecutive detections: ", self.consecutive_detections)
                     self.observed_distance_to_sign = self._get_sign_height(rotated_frame)
 
 
@@ -194,7 +203,7 @@ class SignDetector:
         Z = self.fx * 0.2032 / (np.sum(horizontal_sum>0) + 0.001)
         self.observed_distance_to_sign = Z
         cv2.imshow("ROI_filt", closing)
-        print(Z)
+        print("Predicted Sign Distance: ", Z)
         return Z
         #
         # cv2.imshow("ROI", M.astype(np.uint8)*255)

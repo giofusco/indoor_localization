@@ -33,6 +33,8 @@ class Odometry:
         self.delta_VIO_position = None
         self.current_abs_yaw = None
         self.initial_VIO_position = None
+        self.previous_time_stamp = 0
+        self.tracker_status = None
 
         # difference between known initial absolute yaw (given by marker for now)
         self.yaw_offset = 0
@@ -84,6 +86,7 @@ class Odometry:
                                     self.current_VIO_yaw = current_data[dconst.CAMERA_ROTATION][1]
                                     self.VIO_yaw_offset = current_data[dconst.CAMERA_ROTATION][1] - yaw_marker
                                     self.current_abs_yaw = yaw_marker
+                                    self.initial_VIO_position = self.current_VIO_position
 
                             elif found is True:
                                 detection_interrupted = True
@@ -111,7 +114,7 @@ class Odometry:
 
     # private function that updates the odometry variables
     def _update_odometry(self, vio_data):
-
+        # if vio_data[dconst.VIO_STATUS] == 'normal':
         self.previous_VIO_position = self.current_VIO_position
         self.previous_VIO_yaw = self.current_VIO_yaw
         self.current_VIO_yaw = vio_data[dconst.CAMERA_ROTATION][1]
@@ -119,7 +122,23 @@ class Odometry:
         self.delta_VIO_yaw = self.current_VIO_yaw - self.previous_VIO_yaw
         self.delta_VIO_position = self.current_VIO_position - self.previous_VIO_position
         self.current_abs_yaw += self.delta_VIO_yaw
-        print("VIO Pos: ",  self.current_VIO_position)
+        self.previous_time_stamp = self.last_processed_timestamp
+        self.last_processed_timestamp = vio_data[dconst.TIMESTAMP]
+        self.tracker_status = vio_data[dconst.VIO_STATUS]
+        # else:
+        #     print("Tracker Unavailable - Filling values... ")
+        #     print(vio_data[dconst.CAMERA_POSITION])
+        #     self.previous_VIO_position = self.current_VIO_position
+        #     self.previous_VIO_yaw = self.current_VIO_yaw
+        #     self.current_VIO_yaw = vio_data[dconst.CAMERA_ROTATION][1]
+        #     self.current_VIO_position += self.delta_VIO_position
+        #     self.delta_VIO_yaw = self.current_VIO_yaw - self.previous_VIO_yaw
+        #     self.delta_VIO_position = self.current_VIO_position - self.previous_VIO_position
+        #     self.current_abs_yaw += self.delta_VIO_yaw
+        #     self.previous_time_stamp = self.last_processed_timestamp
+        #     self.last_processed_timestamp = vio_data[dconst.TIMESTAMP]
+
+        # print("VIO Pos: ",  self.current_VIO_position)
 
     #returns raw VIO measurements
     def get_measurements(self):
@@ -127,7 +146,7 @@ class Odometry:
 
     # returns change in VIO position and yaw
     def get_measurements_and_deltas(self):
-        return self.current_VIO_position, self.current_VIO_yaw, self.delta_VIO_position, self.delta_VIO_yaw
+        return self.current_VIO_position, self.current_VIO_yaw, self.delta_VIO_position, self.delta_VIO_yaw, self.tracker_status
 
     # returns the initial position and yaw measured when looking for a marker in the beginning
     def get_initial_measurements(self):

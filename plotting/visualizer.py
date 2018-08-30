@@ -21,31 +21,6 @@ class Visualizer:
     def close_all_windows():
         cv2.destroyAllWindows()
 
-    # @staticmethod
-    # def plot_yaw(image):
-    #     # plot absolute VIO yaw
-    #     p = self.map_data.env_map.xy2uv(self.observers[cnames.ODOMETRY].current_position)
-    #     vio_y_rotation = self.observers[cnames.ODOMETRY].starting_yaw + self.current_data[dconst.CAMERA_ROTATION][
-    #         1] - math.pi / 2
-    #     # vio_y_rotation = self.observers[cnames.ODOMETRY].current_yaw - math.pi/2
-    #     # print ">>", vio_y_rotation*180/math.pi
-    #     x = int(math.cos(vio_y_rotation) * 20)
-    #     y = int(math.sin(vio_y_rotation) * 20)
-    #     image = cv2.arrowedLine(image, (p[0], p[1]), (p[0] - x, p[1] + y), (0, 255, 0), 2)
-    #
-    #     if self.observers[cnames.ODOMETRY].last_marker_yaw is not None:
-    #         x = int(math.cos(self.observers[cnames.ODOMETRY].last_marker_yaw - math.pi / 2) * 20)
-    #         y = int(math.sin(self.observers[cnames.ODOMETRY].last_marker_yaw - math.pi / 2) * 20)
-    #         image = cv2.arrowedLine(image, (p[0], p[1]), (p[0] - x, p[1] + y), (255, 0, 0), 2)
-    #     # print "** LAST MARKER YAW ", self.observers[cnames.ODOMETRY].last_marker_yaw * 180/math.pi
-    #     # axis_orientation = self.observers[cnames.ODOMETRY].starting_yaw
-    #     # x = int(math.cos(axis_orientation - math.pi / 2) * 20)
-    #     # y = int(math.sin(axis_orientation - math.pi / 2) * 20)
-    #     # image = cv2.arrowedLine(image, (p[0], p[1]), (p[0] - x, p[1] + y), (0, 0, 255), 2)
-    #
-    #     return image
-
-
     def plot_map_feature(self, annotated_map, feature_id, num_feature=None):
         draw_map = self.draw_map.copy()
         if num_feature is not None:
@@ -59,9 +34,6 @@ class Visualizer:
                 cv2.putText(draw_map,str(f.position),tuple( (pos[0], pos[1])),cv2.FONT_HERSHEY_COMPLEX_SMALL,.5, (0,255,0))
             cv2.imshow("Locations of " + feature_id, draw_map)
             cv2.waitKey(-1)
-
-
-
 
     def plot_particle_displacement(self, annotated_map, particles, destinations_px):
         draw_map = self.draw_map.copy()
@@ -101,15 +73,15 @@ class Visualizer:
         valid_particles = particles[particles[:,3]>=0]
         score_colors = self.jets(valid_particles[:,3])*255
         pts = annotated_map.uv2pixels_vectorized(valid_particles[:,0:2])
-#        yaw_uv = valid_particles[:,0:2] + [int(cos(valid_particles[:,2])*1.5), int(sin(valid_particles[:,2])*1.5)]
-#         yaw_pts = annotated_map.uv2pixels_vectorized(yaw_uv)
+        yaw_uv = valid_particles[:,0:2] + np.asarray( (np.cos(valid_particles[:,2]), np.sin(valid_particles[:,2]) ), dtype=np.float64 ).transpose()
+        yaw_pts = annotated_map.uv2pixels_vectorized(yaw_uv)
 
         for p in range(len(valid_particles)):
 
             cv2.circle(draw_map, (pts[p,0], pts[p,1]), int(5*(valid_particles[p,3])),
                        (score_colors[p,2], score_colors[p,1], score_colors[p,0]))
 
-            #draw_map = cv2.arrowedLine(draw_map, (pts[p,0], pts[p,1]), (yaw_pts[p,0], yaw_pts[p,1]), (0,255,0), 2)
+            # draw_map = cv2.arrowedLine(draw_map, (pts[p,0], pts[p,1]), (yaw_pts[p,0], yaw_pts[p,1]), (score_colors[p,2], score_colors[p,1], score_colors[p,0]), 2)
 
             # if point[3] > 0.5:
             # cv2.circle(draw_map, tuple(annotated_map.xy2uv(point[0:2])), 1, (0, 255, 0))

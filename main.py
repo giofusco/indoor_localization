@@ -14,12 +14,12 @@ from plotting.visualizer import Visualizer
 import cv2
 # import numpy as np
 # import cProfile
-
+from math import pi
 
 STEP_PAUSE = 1
 UNIFORM = 0
-NUM_PARTICLES = 1000
-MARKER_DETECTOR_MIN_CONSEC_FRAMES = 2
+NUM_PARTICLES = 10000
+MARKER_DETECTOR_MIN_CONSEC_FRAMES = 5
 CHECK_WALL_CROSSING = 1
 
 INIT_POS_NOISE = 0.
@@ -29,13 +29,14 @@ STEP_POS_NOISE_MIN = 0.0
 STEP_YAW_NOISE = 0.0
 #
 INIT_POS_NOISE = 0.5
-# INIT_YAW_NOISE = 0.0
-STEP_POS_NOISE_MAJ = 1.25
-# STEP_POS_NOISE_MIN = 0.75
-# STEP_YAW_NOISE = 0.05
+INIT_YAW_NOISE = pi/6
+STEP_POS_NOISE_MAJ = 1.2
+STEP_POS_NOISE_MIN = 1.2
+STEP_YAW_NOISE = 0.05
+FUDGE_MAX = 1.
 
 # 99S undershooting
-data_folder = './data/130'
+data_folder = './data/84M'
 map_featsfile = './res/mapFeatures.yml'
 map_image = './res/Walls.png'
 walkable_image = './res/Walkable.png'
@@ -51,7 +52,7 @@ def main():
     # reads data from VIO files
     data_parser = DataParser(data_folder)
 
-    annotated_map = AnnotatedMap(map_image, walkable_image, map_featsfile)
+    annotated_map = AnnotatedMap(map_image, walkable_image, map_featsfile, scale=292./12.45)
     visualizer = Visualizer(annotated_map.get_walls_image())
     # visualizer.plot_map_feature(annotated_map, 'exit_sign', None)
 
@@ -67,7 +68,7 @@ def main():
 
     nav_system.initialize(num_particles=NUM_PARTICLES, uniform=UNIFORM, init_pos_noise=INIT_POS_NOISE, init_yaw_noise=INIT_YAW_NOISE,
                             step_pos_noise_maj=STEP_POS_NOISE_MAJ, step_pos_noise_min=STEP_POS_NOISE_MIN, step_yaw_noise=STEP_YAW_NOISE, 
-                            check_wall_crossing=CHECK_WALL_CROSSING)
+                            check_wall_crossing=CHECK_WALL_CROSSING, fudge_max=FUDGE_MAX)
     while True:
         try:
             nav_system.step()
