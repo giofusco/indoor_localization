@@ -19,19 +19,19 @@ from math import pi
 STEP_PAUSE = 1
 UNIFORM = 0
 NUM_PARTICLES = 10000
-MARKER_DETECTOR_MIN_CONSEC_FRAMES = 8
+MARKER_DETECTOR_MIN_CONSEC_FRAMES = 5
 CHECK_WALL_CROSSING = 1
 
 #
-INIT_POS_NOISE = 1.
+INIT_POS_NOISE = 1.15
 INIT_YAW_NOISE = pi/6
-STEP_POS_NOISE_MAJ = 1.2
+STEP_POS_NOISE_MAJ = 1.35
 STEP_POS_NOISE_MIN = 1.1
-STEP_YAW_NOISE = 0.05
-FUDGE_MAX = 1.
+STEP_YAW_NOISE = 0.15
+FUDGE_MAX = 1.0
 
 # 99S undershooting
-data_folder = './data/P2_5'
+data_folder = './data/P2_4'
 map_featsfile = './res/mapFeatures.yml'
 map_image = './res/Walls.png'
 walkable_image = './res/Walkable.png'

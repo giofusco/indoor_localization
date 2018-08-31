@@ -132,7 +132,7 @@ class NavigationSystem:
         values = prepare_heat_map(uv_pix.astype(np.int32), self.particle_filter.particles[:, particle_filter.PF_SCORE],
                                   self.annotated_map.get_walls_image().shape)
 
-        kde = cv2.GaussianBlur(values, (7, 7), 5.)
+        kde = cv2.GaussianBlur(values, (11, 11), 35.)
         idx_sort = np.argsort(kde, axis=1)
         idx = idx_sort[:,-1]
 
@@ -140,13 +140,13 @@ class NavigationSystem:
         loc_max_0 = np.array( (idx[idx_row[-1]],idx_row[-1] ))
         max_0 = kde[idx_row[-1], idx[idx_row[-1]]]
 
-        loc_max_1 = np.asarray([idx_row[-2], idx[idx_row[-2]]])
+        loc_max_1 =  np.array((idx[idx_row[-2]], idx_row[-2]))
         max_1 = kde[idx_row[-2], idx[idx_row[-2]]]
 
         dist = np.linalg.norm(loc_max_1-loc_max_1)
         print(dist)
         if verbose:
-            self.visualizer.visualize_heat_map(kde, loc_max_0)
+            self.visualizer.visualize_heat_map(kde, loc_max_0, loc_max_1)
 
 # @jit(nopython=True)
 # def find_peaks(M, peaks):
