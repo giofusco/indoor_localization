@@ -169,18 +169,17 @@ class ParticleFilter:
             # print("APP:", app)
             start_pt = self.annotated_map.uv2pixels_vectorized(self.particles[:, PF_X:PF_YAW])
             cnt = 0
-            d_global = np.zeros((len(self.particles), len(self.annotated_map.map_landmarks_dict['exit_sign'])), dtype=np.float64)
             yaw_score = np.zeros((len(self.particles), len(self.annotated_map.map_landmarks_dict['exit_sign'])), dtype=np.float64)
             for s in self.annotated_map.map_landmarks_dict['exit_sign']:
                 end_pt = self.annotated_map.uv2pixels(s.position)
-                ys = np.ones(len(self.particles), dtype=np.float64)
+                ys = np.zeros(len(self.particles), dtype=np.float64)
                 # yaw_score[:, cnt]\
 
-                # yaw_score[:, cnt] = score_particle_yaw_to_sign(start_pt.astype(np.float64), end_pt.astype(np.float64),
-                #                               self.particles[:, PF_X:PF_YAW].astype(np.float64), np.asarray(s.position, dtype=np.float64),
-                #                               self.particles[:, PF_YAW].astype(np.float64),
-                #                               np.asarray(s.normal, dtype=np.float64), ys, self.walls_image, observations[3],
-                #                                   float(app))
+                yaw_score[:, cnt] = score_particle_yaw_to_sign(start_pt.astype(np.float64), end_pt.astype(np.float64),
+                                               self.particles[:, PF_X:PF_YAW].astype(np.float64), np.asarray(s.position, dtype=np.float64),
+                                               self.particles[:, PF_YAW].astype(np.float64),
+                                               np.asarray(s.normal, dtype=np.float64), ys, self.walls_image, observations[3],
+                                                   float(app))
                 tmp_d = np.abs(observations[2] - cdist(self.particles[:, 0:2], [s.position], metric='euclidean'))
                 yaw_score[:, cnt] *= 1/(1+.1*tmp_d).squeeze()
 

@@ -8,6 +8,7 @@ import itertools
 from plotting import visualizer as vis
 from particlefilter.particle_filter import ParticleFilter
 from particlefilter import particle_filter
+from scipy.spatial.distance import cdist
 
 from numba import jit
 
@@ -131,14 +132,29 @@ class NavigationSystem:
         values = prepare_heat_map(uv_pix.astype(np.int32), self.particle_filter.particles[:, particle_filter.PF_SCORE],
                                   self.annotated_map.get_walls_image().shape)
 
-        kde = cv2.GaussianBlur(values, (3, 3), 1.)
+        kde = cv2.GaussianBlur(values, (7, 7), 5.)
+        idx_sort = np.argsort(kde, axis=1)
+        idx = idx_sort[:,-1]
 
+        idx_row = np.argsort(kde[np.arange(len(kde)), idx], axis=0)
+        loc_max_0 = np.array( (idx[idx_row[-1]],idx_row[-1] ))
+        max_0 = kde[idx_row[-1], idx[idx_row[-1]]]
+
+        loc_max_1 = np.asarray([idx_row[-2], idx[idx_row[-2]]])
+        max_1 = kde[idx_row[-2], idx[idx_row[-2]]]
+
+        dist = np.linalg.norm(loc_max_1-loc_max_1)
+        print(dist)
         if verbose:
-            self.visualizer.visualize_heat_map(kde)
+            self.visualizer.visualize_heat_map(kde, loc_max_0)
+
+# @jit(nopython=True)
+# def find_peaks(M, peaks):
+#     a peak is row, col, value
+    # for r in range(0, )
 
 @jit(nopython=True)
 def prepare_heat_map(px_points, scores, map_shape):
-    print(map_shape)
 
     map_image = np.zeros((map_shape[0], map_shape[1], 1), np.float32)
     for i_pns in range(0, len(px_points)):
