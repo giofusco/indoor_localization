@@ -13,7 +13,7 @@ DETECTION_WINDOW_NAME = "SignDetector"
 
 class SignDetector:
 
-    def __init__(self, name, camera_id = camera_info.IPHONE8_640x360):
+    def __init__(self, name, camera_horiz_dist_to_sign = 1., camera_id = camera_info.IPHONE8_640x360):
         # init descriptors
         self.hog = cv2.HOGDescriptor('./classifiers/hog.xml')
         self.sift = cv2.xfeatures2d.SIFT_create()
@@ -36,10 +36,8 @@ class SignDetector:
         self.fx = self.camera_matrix[0][0,0]
         self.fy = self.camera_matrix[1][0,1]
         self.observed_distance_to_sign = -1.
-
+        self.camera_horiz_dist_to_sign = camera_horiz_dist_to_sign
         self.consecutive_detections = 0
-
-
 
     def get_observation(self, data):
         # self.observed_distance_to_sign = -1.
@@ -93,8 +91,10 @@ class SignDetector:
         r_hog = hog.compute(roi)
         return r_hog
 
+
     def set_sign_height(self, height_m):
         self.sign_height_m = height_m
+
 
     def get_sign_info(self):
         return self.observed_distance_to_sign, self.roi
@@ -140,72 +140,86 @@ class SignDetector:
                     self.consecutive_detections = 0
                 if self.roi is not None and self.consecutive_detections >= 0:
                     print("Consecutive detections: ", self.consecutive_detections)
-                    self.observed_distance_to_sign = self._get_sign_height(rotated_frame)
+                    # self.observed_distance_to_sign = self._get_sign_height(rotated_frame)
+                    self.observed_distance_to_sign = self.estimate_sign_distance(rotated_frame, data)
 
 
-    def _get_sign_height(self, img):
+    def estimate_sign_distance(self, frame, data):
+        # camera pitch
+        gamma = data[dc.CAMERA_ROTATION][0]
+        y = self.camera_horiz_dist_to_sign
+        center_row = int(frame.shape[0]/2)
+        f = self.fx
+        detection_row = int(self.roi[0] + self.roi[2]/2)
+        delta = math.atan((center_row-detection_row)/f)
+        z = y / math.tan(gamma + delta)
+        print("Predicted Sign Distance: ", z)
+        return z
 
-        h = self.roi[1] + self.roi[3]
-        if h > img.shape[0]:
-            h = img.shape[0] - 1
-        w = self.roi[0] + self.roi[2]
-        if w > img.shape[1]:
-            w = img.shape[1] - 1
-        roi = img[self.roi[1]:h, self.roi[0]:w]  # crop the image
-        Ihsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV_FULL)
 
-        center = np.array((0, 0), dtype=np.int32)
-        center[0] = math.ceil(Ihsv.shape[0] / 2)
-        center[1] = math.ceil(Ihsv.shape[1] / 2)
-
-        offset_row = int(math.floor(Ihsv.shape[0] * .3))
-        offset_col = int(math.floor(Ihsv.shape[1] * .15))
-        # Ihsv(center(0)-offset_row : center(0) + offset_row, 1:-1)
-        roi_hsv = Ihsv[(center[0] - offset_row) : center[0] + offset_row,
-                  center[1] - offset_col:center[1] + offset_col,:]
-
-        h_roi = np.ravel(roi_hsv[:, :, 0])
-        s_roi = np.ravel(roi_hsv[:, :, 1])
-
-        H, xedges, yedges = np.histogram2d(h_roi, s_roi, [10, 10])
-
-        H_filt = cv2.filter2D(H,-1, self.avg_filter)
-        # print(np.max(H_filt))
-        ind = np.unravel_index(np.argmax(H_filt, axis=None), H_filt.shape)
-        # cv2.imshow("ROI", Ihsv[:,:,1])
-        # print(H_filt)
-        ht = xedges[ind[0]]
-        st = yedges[ind[1]]
-        hh = Ihsv[:,:,0] >= ht
-        hs = Ihsv[:, :, 1] >= st
-        M = hh & hs
-        # print st, ht
-        rect_element = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-        closing = cv2.morphologyEx(M.astype(np.uint8)*255 , cv2.MORPH_CLOSE, rect_element, iterations=2)
-        horizontal_sum = np.sum(closing/255, 1)
-
-        thresh = closing.shape[1]*.05
-        found = False
-        i = 0
-        while i < len(horizontal_sum):
-            if horizontal_sum[i] <= thresh:
-                horizontal_sum[i] = 0
-                i += 1
-            else:
-                break
-        i = len(horizontal_sum) - 1
-        while i >= 0:
-            if horizontal_sum[i] <= thresh:
-                horizontal_sum[i] = 0
-                i -= 1
-            else:
-                break
-        Z = self.fx * 0.2032 / (np.sum(horizontal_sum>0) + 0.001)
-        self.observed_distance_to_sign = Z
-        cv2.imshow("ROI_filt", closing)
-        print("Predicted Sign Distance: ", Z)
-        return Z
-        #
+    # def _get_sign_height(self, img):
+    #
+    #     h = self.roi[1] + self.roi[3]
+    #     if h > img.shape[0]:
+    #         h = img.shape[0] - 1
+    #     w = self.roi[0] + self.roi[2]
+    #     if w > img.shape[1]:
+    #         w = img.shape[1] - 1
+    #     roi = img[self.roi[1]:h, self.roi[0]:w]  # crop the image
+    #     Ihsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV_FULL)
+    #
+    #     center = np.array((0, 0), dtype=np.int32)
+    #     center[0] = math.ceil(Ihsv.shape[0] / 2)
+    #     center[1] = math.ceil(Ihsv.shape[1] / 2)
+    #
+    #     offset_row = int(math.floor(Ihsv.shape[0] * .3))
+    #     offset_col = int(math.floor(Ihsv.shape[1] * .15))
+    #     # Ihsv(center(0)-offset_row : center(0) + offset_row, 1:-1)
+    #     roi_hsv = Ihsv[(center[0] - offset_row) : center[0] + offset_row,
+    #               center[1] - offset_col:center[1] + offset_col,:]
+    #
+    #     h_roi = np.ravel(roi_hsv[:, :, 0])
+    #     s_roi = np.ravel(roi_hsv[:, :, 1])
+    #
+    #     H, xedges, yedges = np.histogram2d(h_roi, s_roi, [10, 10])
+    #
+    #     H_filt = cv2.filter2D(H,-1, self.avg_filter)
+    #     # print(np.max(H_filt))
+    #     ind = np.unravel_index(np.argmax(H_filt, axis=None), H_filt.shape)
+    #     # cv2.imshow("ROI", Ihsv[:,:,1])
+    #     # print(H_filt)
+    #     ht = xedges[ind[0]]
+    #     st = yedges[ind[1]]
+    #     hh = Ihsv[:,:,0] >= ht
+    #     hs = Ihsv[:, :, 1] >= st
+    #     M = hh & hs
+    #     # print st, ht
+    #     rect_element = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+    #     closing = cv2.morphologyEx(M.astype(np.uint8)*255 , cv2.MORPH_CLOSE, rect_element, iterations=2)
+    #     horizontal_sum = np.sum(closing/255, 1)
+    #
+    #     thresh = closing.shape[1]*.05
+    #     found = False
+    #     i = 0
+    #     while i < len(horizontal_sum):
+    #         if horizontal_sum[i] <= thresh:
+    #             horizontal_sum[i] = 0
+    #             i += 1
+    #         else:
+    #             break
+    #     i = len(horizontal_sum) - 1
+    #     while i >= 0:
+    #         if horizontal_sum[i] <= thresh:
+    #             horizontal_sum[i] = 0
+    #             i -= 1
+    #         else:
+    #             break
+    #     Z = self.fx * 0.2032 / (np.sum(horizontal_sum>0) + 0.001)
+    #     self.observed_distance_to_sign = Z
+    #     cv2.imshow("ROI_filt", closing)
+    #     print("Predicted Sign Distance: ", Z)
+    #     return Z
+    #     #
         # cv2.imshow("ROI", M.astype(np.uint8)*255)
 
         # cv2.waitKey(-1)

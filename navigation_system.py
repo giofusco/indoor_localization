@@ -9,6 +9,7 @@ from plotting import visualizer as vis
 from particlefilter.particle_filter import ParticleFilter
 from particlefilter import particle_filter
 
+from numba import jit
 
 class NavigationSystem:
 
@@ -87,9 +88,8 @@ class NavigationSystem:
                                       observations=[observed_pos_marker, observed_yaw_marker, observed_sign_distance,
                                                     observed_sign_roi])
 
-            #uv = self.annotated_map.xy2uv(self.observers[cnames.ODOMETRY].current_position)
+            self.calculate_user_location()
 
-            # VIO_Theta, VIO_X, VIO_Z, Marker_Theta, MARKER_X, MARKER_Z
 
             self.position_trace.append(self.particle_filter.particles[0, 0:2] + [0., 0.])
             self.position_file_handler.write(str(measured_VIO_yaw)+ ',' + str(VIO_pos[particle_filter.PF_X]) + ',' +
@@ -126,5 +126,24 @@ class NavigationSystem:
         self.visualizer.close_all_windows()
         self.visualizer.plot_trace(self.data_source, self.annotated_map, self.position_trace)
 
+    def calculate_user_location(self, verbose = True):
+        uv_pix = self.annotated_map.uv2pixels_vectorized(self.particle_filter.particles[:, 0:2])
+        values = prepare_heat_map(uv_pix.astype(np.int32), self.particle_filter.particles[:, particle_filter.PF_SCORE],
+                                  self.annotated_map.get_walls_image().shape)
 
+        kde = cv2.GaussianBlur(values, (3, 3), 1.)
 
+        if verbose:
+            self.visualizer.visualize_heat_map(kde)
+
+@jit(nopython=True)
+def prepare_heat_map(px_points, scores, map_shape):
+    print(map_shape)
+
+    map_image = np.zeros((map_shape[0], map_shape[1], 1), np.float32)
+    for i_pns in range(0, len(px_points)):
+        p = [px_points[i_pns, 1], px_points[i_pns,0]]
+        w = scores[i_pns]
+        map_image[p[0], p[1]] += w
+
+    return map_image

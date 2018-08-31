@@ -120,6 +120,13 @@ class Visualizer:
         return color
 
 
+    def visualize_heat_map(self, kde_map):
+
+        # VIO_Theta, VIO_X, VIO_Z, Marker_Theta, MARKER_X, MARKER_Z
+        min_val, max_val, a, b = cv2.minMaxLoc(kde_map)
+        adjMap = np.array((kde_map - min_val) * (255 / (max_val - min_val)), dtype=np.uint8)
+        adjMap = cv2.applyColorMap(adjMap, cv2.COLORMAP_JET)
+        cv2.imshow("KDE", self.draw_map + adjMap)
 
     def plot_trace(self, data_source, annotated_map, trace):
         wall_map = self.draw_map.copy()
