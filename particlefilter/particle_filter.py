@@ -56,49 +56,109 @@ class ParticleFilter:
 
     def initialize_particles_at(self, pos, global_yaw, yaw_offset, position_noise_sigma, yaw_noise_sigma, fudge_max=1.):
         #initialize N random particles all over the walkable area
-        sample_x = np.random.normal(pos[0], position_noise_sigma, self.num_particles)
-        sample_z = np.random.normal(pos[1], position_noise_sigma, self.num_particles)
-        self.yaw_offset = yaw_offset + pi/2
-        yaws = global_yaw * np.ones((self.num_particles,1), dtype=np.float64)
-        # yaws = global_yaw + np.random.normal(0, yaw_noise_sigma, self.num_particles)
-        weights = np.ones((self.num_particles))
-        self.particles = np.column_stack((sample_x, sample_z, yaws, weights,  self.yaw_offset +
-                                          np.random.normal(0, yaw_noise_sigma, self.num_particles),
-                                          np.random.uniform(1, fudge_max, self.num_particles)))
-        self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
 
-    # def initialize_particles_uniform(self, position_noise_sigma=0.5, yaw_noise_sigma=0.1):
-    #     # initialize N random particles all over the walkable area
-    #     sample_x = np.random.uniform(0., self.annotated_map.mapsize_xy[0], self.num_particles)
-    #     sample_y = np.random.uniform(0., self.annotated_map.mapsize_xy[1], self.num_particles)
-    #     yaws = np.random.normal(0, yaw_noise_sigma, self.num_particles)
-    #     # self.yaw_offset = yaw_offset
-    #     weights = np.ones(self.num_particles)
-    #     self.particles = np.column_stack((sample_x, sample_y, yaws, weights))
-    #     self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
+        self.yaw_offset = yaw_offset + pi / 2
 
-    def initialize_particles_uniform_with_yaw(self, global_yaw, yaw_offset, position_noise_sigma=0.5, yaw_noise_sigma=0.1):
-        # initialize N random particles all over the walkable area
 
-        self.yaw_offset = yaw_offset - pi/2
         n_valid_particles = 0
         num_samples = self.num_particles
-        yaw_offsets = global_yaw * np.ones(self.num_particles,1)
 
         while n_valid_particles < self.num_particles:
-            sample_x = np.random.uniform(0., self.annotated_map.mapsize_xy[0], num_samples)
-            sample_z = np.random.uniform(0., self.annotated_map.mapsize_xy[1], num_samples)
+            sample_x = np.random.normal(pos[0], position_noise_sigma, num_samples)
+            sample_z = np.random.normal(pos[1], position_noise_sigma, num_samples)
+
             sample_x, sample_z, num_valid = self.remove_non_walkable_locations(sample_x, sample_z)
             n_valid_particles += num_valid
             # yaws = yaw_offset + np.random.normal(0, yaw_noise_sigma, num_valid)
             # yaws = yaw_offset + np.random.normal(0, 0, num_valid)
+
             weights = np.ones(num_valid)
+
             num_samples = self.num_particles - n_valid_particles
+            yaws = global_yaw * np.ones((num_valid, 1), dtype=np.float64)
+            yaws = yaws.squeeze()
+
             if len(self.particles) == 0:
-                self.particles = np.column_stack((sample_x, sample_z, yaw_offsets, weights))
+                self.particles = np.column_stack((sample_x, sample_z, yaws, weights,  self.yaw_offset +
+                                          np.random.normal(0, yaw_noise_sigma, num_valid),
+                                          np.random.uniform(1, fudge_max, num_valid)))
             else:
-                self.particles = np.concatenate((self.particles, np.column_stack((sample_x, sample_z, yaw_offsets, weights))),
-                                                axis=0)
+                self.particles = np.concatenate(
+                    (self.particles, np.column_stack((sample_x, sample_z, yaws, weights,  self.yaw_offset +
+                                          np.random.normal(0, yaw_noise_sigma, num_valid),
+                                          np.random.uniform(1, fudge_max, num_valid) ) ) ),
+                    axis=0)
+        self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
+
+
+    def initialize_particles_uniform_with_yaw(self, global_yaw, yaw_offset, position_noise_sigma=0.5, yaw_noise_sigma=0.1,
+                                              fudge_max = 1.):
+        # initialize N random particles all over the walkable area
+
+        self.yaw_offset = yaw_offset + pi / 2
+
+        n_valid_particles = 0
+        num_samples = self.num_particles
+
+        while n_valid_particles < self.num_particles:
+            sample_x = np.random.uniform(0., self.annotated_map.mapsize_xy[1], num_samples)
+            sample_z = np.random.uniform(0., self.annotated_map.mapsize_xy[0], num_samples)
+
+            num_valid = self.num_particles
+
+            sample_x, sample_z, num_valid = self.remove_non_walkable_locations(sample_x, sample_z)
+            n_valid_particles += num_valid
+
+            weights = np.ones(num_valid)
+
+            num_samples = self.num_particles - n_valid_particles
+            yaws = global_yaw * np.ones((num_valid, 1), dtype=np.float64)
+            yaws = yaws.squeeze()
+
+            if len(self.particles) == 0:
+                self.particles = np.column_stack((sample_x, sample_z, yaws, weights, self.yaw_offset +
+                                                  np.random.normal(0, yaw_noise_sigma, num_valid),
+                                                  np.random.uniform(1, fudge_max, num_valid)))
+            else:
+                self.particles = np.concatenate(
+                    (self.particles, np.column_stack((sample_x, sample_z, yaws, weights, self.yaw_offset +
+                                                      np.random.normal(0, yaw_noise_sigma, num_valid),
+                                                      np.random.uniform(1, fudge_max, num_valid)))),
+                    axis=0)
+        self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
+
+
+    def initialize_particles_uniform(self, position_noise_sigma=0.5, yaw_noise_sigma=0.1,
+                                              fudge_max = 1.):
+        # initialize N random particles all over the walkable area
+
+        self.yaw_offset = 0
+
+        n_valid_particles = 0
+        num_samples = self.num_particles
+
+        while n_valid_particles < self.num_particles:
+            sample_x = np.random.uniform(0., self.annotated_map.mapsize_xy[1], num_samples)
+            sample_z = np.random.uniform(0., self.annotated_map.mapsize_xy[0], num_samples)
+
+            sample_x, sample_z, num_valid = self.remove_non_walkable_locations(sample_x, sample_z)
+            n_valid_particles += num_valid
+
+            weights = np.ones(num_valid)
+
+            num_samples = self.num_particles - n_valid_particles
+            yaws = np.random.uniform(0, pi*2, num_valid)
+            yaw_offset = np.random.uniform(0, pi * 2, num_valid)
+            yaws = yaws.squeeze()
+
+            if len(self.particles) == 0:
+                self.particles = np.column_stack((sample_x, sample_z, yaws, weights, yaw_offset,
+                                                  np.random.uniform(1, fudge_max, num_valid)))
+            else:
+                self.particles = np.concatenate(
+                    (self.particles, np.column_stack((sample_x, sample_z, yaws, weights, yaw_offset,
+                                                      np.random.uniform(1, fudge_max, num_valid)))),
+                    axis=0)
         self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
 
     def step(self, measurements, observations):
@@ -122,7 +182,7 @@ class ParticleFilter:
         tmp_pos = np.column_stack((x_vector, z_vector))
         tmp_pt = self.annotated_map.uv2pixels_vectorized(tmp_pos)
 
-        idx = [self.walkable_mask[np.array(tmp_pt[:, PF_U]), np.array(tmp_pt[:, PF_V])] > 0]
+        idx = [self.walkable_mask[np.array(tmp_pt[:, PF_V]), np.array(tmp_pt[:, PF_U])] > 0]
         sample_x = x_vector[idx]
         sample_z = z_vector[idx]
 
@@ -267,6 +327,7 @@ def score_particle_yaw_to_sign(uv_pt1_list, uv_pt2, xy_pt1_list, xy_pt2, yaws, s
         column_detection = int(sign_roi[0] + sign_roi[2]/2)
         theta_d = yaws[p] + (180 - column_detection) * angle_per_pixel
         x = abs(sin(theta_pred - theta_d))
+        # x = sin((theta_pred - theta_d)/2)
         yaw_score[p] = 0.2/(0.2+x)
 
         r1 = int(uv_pt1_list[p][1])
