@@ -66,6 +66,7 @@ class Visualizer:
         uv = annotated_map.xy2uv(position)
         traj_image = self._plot_point(uv, color)
         cv2.imshow(window_name, traj_image)
+
         # cv2.waitKey(1)
 
     def plot_particles(self, annotated_map, particles):
@@ -120,7 +121,7 @@ class Visualizer:
         return color
 
 
-    def visualize_heat_map(self, kde_map, loc=None, loc2=None, avg = False):
+    def visualize_heat_map(self, kde_map, loc=None, loc2=None, frame_num = None, avg = False):
 
         # VIO_Theta, VIO_X, VIO_Z, Marker_Theta, MARKER_X, MARKER_Z
         min_val, max_val, a, b = cv2.minMaxLoc(kde_map)
@@ -139,6 +140,8 @@ class Visualizer:
                 adjMap = cv2.circle(adjMap,tuple(loc2),3, (0,128,128), 4)
 
         cv2.imshow("KDE", self.draw_map + adjMap)
+        if frame_num is not None:
+            cv2.imwrite("kde_" + str(frame_num)+'.jpg', self.draw_map + adjMap)
 
     def plot_trace(self, data_source, annotated_map, trace):
         wall_map = self.draw_map.copy()

@@ -33,7 +33,7 @@ class NavigationSystem:
         self.particle_filter = None
         self.visualizer = visualizer
         self.initial_position_set = False
-
+        self.frame_counter = 0
         self.position_filename = data_source.folder + '/data_log.txt'
 
         # create user positions file
@@ -74,6 +74,7 @@ class NavigationSystem:
         self.current_data = self.data_source.read_next(load_image=True)
 
         if not self.current_data == {}:
+            self.frame_counter += 1
             # notify all observers that new data are available and update accordingly
             for name, observer in self.observers.items():
                 observer.update(self.current_data)
@@ -144,9 +145,9 @@ class NavigationSystem:
         max_1 = kde[idx_row[-2], idx[idx_row[-2]]]
 
         dist = np.linalg.norm(loc_max_1-loc_max_1)
-        print(dist)
+        # print(dist)
         if verbose:
-            self.visualizer.visualize_heat_map(kde, loc_max_0, loc_max_1)
+            self.visualizer.visualize_heat_map(kde, loc_max_0, loc_max_1, self.frame_counter)
 
 # @jit(nopython=True)
 # def find_peaks(M, peaks):

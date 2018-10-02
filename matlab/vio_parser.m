@@ -1,5 +1,5 @@
-function [t, M, coord, rot, vio_status] = vio_parser(vio_filename)
-
+function [t, M, coord, rot, alt, vio_status] = vio_parser(vio_filename, altimeter)
+alt = {};
 dir_query_string = fullfile(vio_filename);
 files = dir(dir_query_string);
 
@@ -16,6 +16,9 @@ for f = 1 : length(files)
         matrix_line = fgetl(fileID);
         coord_line = fgetl(fileID);
         angles_line = fgetl(fileID);
+        if altimeter == 1
+            pressure_line = fgetl(fileID);
+        end
 
         if (status_line == -1)
             do_read = 0;
@@ -26,6 +29,9 @@ for f = 1 : length(files)
         M{f}{cnt} = parse_matrix_string(matrix_line);
         coord{f}{cnt} = parse_coordinate_string(coord_line);
         rot{f}{cnt} = parse_angles_line(angles_line);
+        if altimeter == 1
+            alt{f}{cnt} = str2double(pressure_line);
+        end
         cnt = cnt + 1;
 
     end

@@ -8,7 +8,7 @@ import cv2
 class DataParser:
 
     VIO_FILE_REGEXP = '/VIO*.txt'
-    BLOCK_LEN = 5
+    BLOCK_LEN = 6
 
     def __init__(self, data_folder, image_format='jpg'):
         self.folder = data_folder

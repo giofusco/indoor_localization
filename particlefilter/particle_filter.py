@@ -174,7 +174,7 @@ class ParticleFilter:
             self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
 
         self.tot_motion += np.linalg.norm(measurements[PF_DELTA_POS], ord=2)
-        if self.tot_motion >= 1.25 or len(self.particles)/self.num_particles < 0.25:
+        if self.tot_motion >= 1. or len(self.particles)/self.num_particles < 0.25:
             self.resample_particles()
             self.tot_motion = 0.
 
