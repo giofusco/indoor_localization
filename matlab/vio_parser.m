@@ -24,7 +24,7 @@ for f = 1 : length(files)
             do_read = 0;
             break;
         end
-        vio_status{f}{cnt} = status_line
+        vio_status{f}{cnt} = status_line;
         t{f}{cnt} = str2double(timestamp_line);
         M{f}{cnt} = parse_matrix_string(matrix_line);
         coord{f}{cnt} = parse_coordinate_string(coord_line);
