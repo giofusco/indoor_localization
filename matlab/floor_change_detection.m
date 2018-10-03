@@ -2,7 +2,7 @@ function floor_change_detection(viofile)
 
 zero_count_threshold = 25; % about 2 seconds
 hPa_threshold = 0.3;
-min_hPa_val = 0.01;
+min_hPa_val = 0.0005;
 partial_hPa_threshold = 0.1; % 10% of hPA_threshold
 
 [t, ~, ~, ~, alt, ~] = vio_parser(viofile, 1);
@@ -45,7 +45,7 @@ for i = 2 : length(pressure)
         zero_count = 0;
     else
         zero_count = zero_count + 1;
-        curr_direction = 0;
+        %curr_direction = 0;
     end
     
     %change of slope or timeout (long zero sequence)
@@ -56,13 +56,23 @@ for i = 2 : length(pressure)
         deltaPressure = abs(pressure(i_end) - pressure(i_start));
             if deltaPressure > hPa_threshold
                 disp('Floor change detected!')
-                prev_direction
-                idx = (tstamp >= tstamp(i_start)) & (tstamp <= tstamp(i_end));
-                patch([t_norm(idx) fliplr(t_norm(idx))], ...
-                      [pressure_norm(idx) zeros(size(pressure_norm(idx)))], ...
-                      [0. 0. 1.], 'FaceAlpha',0.3, 'EdgeColor','none')  
+                % visualization
+                if prev_direction == 1    
+                    idx = (tstamp >= tstamp(i_start)) & (tstamp <= tstamp(i_end));
+                    patch([t_norm(idx) fliplr(t_norm(idx))], ...
+                          [pressure_norm(idx) zeros(size(pressure_norm(idx)))], ...
+                          [0. 0. 1.], 'FaceAlpha',0.3, 'EdgeColor','none')
+                else
+                    idx = (tstamp >= tstamp(i_start)) & (tstamp <= tstamp(i_end));
+                    patch([t_norm(idx) fliplr(t_norm(idx))], ...
+                          [pressure_norm(idx) zeros(size(pressure_norm(idx)))], ...
+                          [1. 0. 1.], 'FaceAlpha',0.3, 'EdgeColor','none')
+                end
+                
+                % event found, start new search
                 i_start = i_end + 1;
                 i_end = -1;
+            
             else
                 if deltaPressure/hPa_threshold > partial_hPa_threshold
                     disp('Partial')
