@@ -60,12 +60,26 @@ for i = 2 : length(pressure)
                 % visualization
                 hold on, plot(t_norm(i_start), pressure_norm(i_start), 'X', 'MarkerSize', 10)
                 hold on, plot(t_norm(i_end), pressure_norm(i_end), 'O', 'MarkerSize', 10)
-                if prev_direction == 1    
+                
+                x_max = xlim;
+                x_max = x_max(2)-x_max(1);
+                y_max = ylim;
+                y_max = y_max(2);
+                
+                if prev_direction == 1  
+                    x = (t_norm(i_end) + t_norm(i_start))/2;
+                    y = (pressure_norm(i_end) + pressure_norm(i_start))/2;
+                    [x/x_max x/x_max],[y/y_max y/y_max+0.01]
+                    annotation('arrow',[x/x_max x/x_max],[y/y_max y/y_max+0.01])
+                    text(x,y,num2str(deltaPressure/hPa_threshold));
                     idx = (tstamp >= tstamp(i_start)) & (tstamp <= tstamp(i_end));
                     patch([t_norm(idx) fliplr(t_norm(idx))], ...
                           [pressure_norm(idx) zeros(size(pressure_norm(idx)))], ...
                           [0. 0. 1.], 'FaceAlpha',0.3, 'EdgeColor','none')
                 else
+                    x = (t_norm(i_end) + t_norm(i_start))/2 - 10;
+                    y = (pressure_norm(i_end) + pressure_norm(i_start))/2;
+                    text(x,y,num2str(deltaPressure/hPa_threshold));
                     idx = (tstamp >= tstamp(i_start)) & (tstamp <= tstamp(i_end));
                     patch([t_norm(idx) fliplr(t_norm(idx))], ...
                           [pressure_norm(idx) zeros(size(pressure_norm(idx)))], ...
