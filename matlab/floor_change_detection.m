@@ -1,8 +1,8 @@
 function floor_change_detection(viofile)
 
-zero_count_threshold = 25; % about 2 seconds
+zero_count_threshold = 20; % about 2 seconds
 hPa_threshold = 0.3;
-min_hPa_val = 0.0005;
+min_hPa_val = 0.005;
 partial_hPa_threshold = 0.1; % 10% of hPA_threshold
 
 [t, ~, ~, ~, alt, ~] = vio_parser(viofile, 1);
@@ -51,12 +51,15 @@ for i = 2 : length(pressure)
     %change of slope or timeout (long zero sequence)
     if prev_direction * curr_direction < 0 || zero_count > zero_count_threshold
         i_end = i - 1;
+        zero_count = 0;
         % this triggers analysis
         if (i_end > 0 && i_start > 0)
         deltaPressure = abs(pressure(i_end) - pressure(i_start));
             if deltaPressure > hPa_threshold
                 disp('Floor change detected!')
                 % visualization
+                hold on, plot(t_norm(i_start), pressure_norm(i_start), 'X', 'MarkerSize', 10)
+                hold on, plot(t_norm(i_end), pressure_norm(i_end), 'O', 'MarkerSize', 10)
                 if prev_direction == 1    
                     idx = (tstamp >= tstamp(i_start)) & (tstamp <= tstamp(i_end));
                     patch([t_norm(idx) fliplr(t_norm(idx))], ...
@@ -76,6 +79,7 @@ for i = 2 : length(pressure)
             else
                 if deltaPressure/hPa_threshold > partial_hPa_threshold
                     disp('Partial')
+                    partial_start_idx = i_start;
                 end
             end
         end
