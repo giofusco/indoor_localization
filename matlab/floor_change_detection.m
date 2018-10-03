@@ -80,6 +80,9 @@ for i = 2 : length(pressure)
                 if deltaPressure/hPa_threshold > partial_hPa_threshold
                     disp('Partial')
                     partial_start_idx = i_start;
+                else
+                    i_start = i_end + 1;
+                    i_end = -1;
                 end
             end
         end
