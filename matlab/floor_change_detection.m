@@ -26,85 +26,107 @@ zero_count = 0;
 partial_direction = nan;
 partial_start_idx = -1;
 
+reset = 0;
+seed_value = pressure(1);
+plot(t_norm(1), pressure_norm(1))
 for i = 2 : length(pressure)
     
-    delta_pressure = pressure(i) - pressure(i-1);
-    
-    % update start index
-    if abs(delta_pressure) > min_hPa_val && i_start == -1
-        i_start = i-1;
+    if reset
+        seed_value = pressure(i-2);
+        reset = 0;
     end
     
-    prev_direction = curr_direction;
+    delta = pressure(i) - seed_value;
     
-    if delta_pressure > min_hPa_val
-        curr_direction = -1;
-        zero_count = 0;
-    elseif delta_pressure < -min_hPa_val
-        curr_direction = 1;
-        zero_count = 0;
-    else
-        zero_count = zero_count + 1;
-        %curr_direction = 0;
-    end
-    
-    %change of slope or timeout (long zero sequence)
-    if prev_direction * curr_direction < 0 || zero_count > zero_count_threshold
-        i_end = i - 1;
-        zero_count = 0;
-        % this triggers analysis
-        if (i_end > 0 && i_start > 0)
-        deltaPressure = abs(pressure(i_end) - pressure(i_start));
-            if deltaPressure > hPa_threshold
-                disp('Floor change detected!')
-                % visualization
-                hold on, plot(t_norm(i_start), pressure_norm(i_start), 'X', 'MarkerSize', 10)
-                hold on, plot(t_norm(i_end), pressure_norm(i_end), 'O', 'MarkerSize', 10)
-                
-                x_max = xlim;
-                x_max = x_max(2)-x_max(1);
-                y_max = ylim;
-                y_max = y_max(2);
-                
-                if prev_direction == 1  
-                    x = (t_norm(i_end) + t_norm(i_start))/2;
-                    y = (pressure_norm(i_end) + pressure_norm(i_start))/2;
-                    [x/x_max x/x_max],[y/y_max y/y_max+0.01]
-                    annotation('arrow',[x/x_max x/x_max],[y/y_max y/y_max+0.01])
-                    text(x,y,num2str(deltaPressure/hPa_threshold));
-                    idx = (tstamp >= tstamp(i_start)) & (tstamp <= tstamp(i_end));
-                    patch([t_norm(idx) fliplr(t_norm(idx))], ...
-                          [pressure_norm(idx) zeros(size(pressure_norm(idx)))], ...
-                          [0. 0. 1.], 'FaceAlpha',0.3, 'EdgeColor','none')
-                else
-                    x = (t_norm(i_end) + t_norm(i_start))/2 - 10;
-                    y = (pressure_norm(i_end) + pressure_norm(i_start))/2;
-                    text(x,y,num2str(deltaPressure/hPa_threshold));
-                    idx = (tstamp >= tstamp(i_start)) & (tstamp <= tstamp(i_end));
-                    patch([t_norm(idx) fliplr(t_norm(idx))], ...
-                          [pressure_norm(idx) zeros(size(pressure_norm(idx)))], ...
-                          [1. 0. 1.], 'FaceAlpha',0.3, 'EdgeColor','none')
-                end
-                
-                % event found, start new search
-                i_start = i_end + 1;
-                i_end = -1;
-            
-            else
-                if deltaPressure/hPa_threshold > partial_hPa_threshold
-                    disp('Partial')
-                    partial_start_idx = i_start;
-                else
-                    i_start = i_end + 1;
-                    i_end = -1;
-                end
-            end
+    if abs(delta) > 0.3
+        if delta/abs(delta) < 0
+            plot(t_norm(i), pressure_norm(i), 'V')
+        else
+            plot(t_norm(i), pressure_norm(i), '^')
         end
-    elseif prev_direction * curr_direction == 1
-        i_end = i;
+        reset = 1;
     end
-    
 end
+
+% for i = 2 : length(pressure)
+%     
+%     delta_pressure = pressure(i) - pressure(i-1);
+%     
+%     % update start index
+%     if abs(delta_pressure) > min_hPa_val && i_start == -1
+%         i_start = i-1;
+%     end
+%     
+%     prev_direction = curr_direction;
+%     
+%     if delta_pressure > min_hPa_val
+%         curr_direction = -1;
+%         zero_count = 0;
+%     elseif delta_pressure < -min_hPa_val
+%         curr_direction = 1;
+%         zero_count = 0;
+%     else
+%         zero_count = zero_count + 1;
+%         %curr_direction = 0;
+%     end
+%     
+%     %change of slope or timeout (long zero sequence)
+%     if prev_direction * curr_direction < 0 || zero_count > zero_count_threshold
+%         i_end = i - 1;
+%         zero_count = 0;
+%         % this triggers analysis
+%         if (i_end > 0 && i_start > 0)
+%         deltaPressure = abs(pressure(i_end) - pressure(i_start));
+%             if deltaPressure > hPa_threshold
+%                 disp('Floor change detected!')
+%                 % visualization
+%                 hold on, plot(t_norm(i_start), pressure_norm(i_start), 'X', 'MarkerSize', 10)
+%                 hold on, plot(t_norm(i_end), pressure_norm(i_end), 'O', 'MarkerSize', 10)
+%                 
+%                 x_max = xlim;
+%                 x_max = x_max(2)-x_max(1);
+%                 y_max = ylim;
+%                 y_max = y_max(2);
+%                 
+%                 if prev_direction == 1  
+%                     x = (t_norm(i_end) + t_norm(i_start))/2;
+%                     y = (pressure_norm(i_end) + pressure_norm(i_start))/2;
+%                     [x/x_max x/x_max],[y/y_max y/y_max+0.01]
+%                     annotation('arrow',[x/x_max x/x_max],[y/y_max y/y_max+0.01])
+%                     text(x,y,num2str(deltaPressure/hPa_threshold));
+%                     idx = (tstamp >= tstamp(i_start)) & (tstamp <= tstamp(i_end));
+%                     patch([t_norm(idx) fliplr(t_norm(idx))], ...
+%                           [pressure_norm(idx) zeros(size(pressure_norm(idx)))], ...
+%                           [0. 0. 1.], 'FaceAlpha',0.3, 'EdgeColor','none')
+%                 else
+%                     x = (t_norm(i_end) + t_norm(i_start))/2 - 10;
+%                     y = (pressure_norm(i_end) + pressure_norm(i_start))/2;
+%                     text(x,y,num2str(deltaPressure/hPa_threshold));
+%                     idx = (tstamp >= tstamp(i_start)) & (tstamp <= tstamp(i_end));
+%                     patch([t_norm(idx) fliplr(t_norm(idx))], ...
+%                           [pressure_norm(idx) zeros(size(pressure_norm(idx)))], ...
+%                           [1. 0. 1.], 'FaceAlpha',0.3, 'EdgeColor','none')
+%                 end
+%                 
+%                 % event found, start new search
+%                 i_start = i_end + 1;
+%                 i_end = -1;
+%             
+%             else
+%                 if deltaPressure/hPa_threshold > partial_hPa_threshold
+%                     disp('Partial')
+%                     partial_start_idx = i_start;
+%                 else
+%                     i_start = i_end + 1;
+%                     i_end = -1;
+%                 end
+%             end
+%         end
+%     elseif prev_direction * curr_direction == 1
+%         i_end = i;
+%     end
+%     
+% end
 
 
 
