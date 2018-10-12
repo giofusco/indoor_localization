@@ -168,13 +168,13 @@ class ParticleFilter:
         if observations[2] is not None:
             self.score_particles(observations)
             self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
-            # self.resample_particles()
-            # self.tot_motion = 0.
+            self.resample_particles()
+            self.tot_motion = 0.
         else:
             self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
 
         self.tot_motion += np.linalg.norm(measurements[PF_DELTA_POS], ord=2)
-        if self.tot_motion >= 1. or len(self.particles)/self.num_particles < 0.25:
+        if self.tot_motion >= 1.5 or len(self.particles)/self.num_particles < 0.25:
             self.resample_particles()
             self.tot_motion = 0.
 
@@ -192,6 +192,8 @@ class ParticleFilter:
 
     def move_particles_by(self, delta_pos, vio_yaw_delta, tracker_status, check_wall_crossing=True):
         start_pt = (self.annotated_map.uv2pixels_vectorized(self.particles[:, PF_X:PF_YAW]))
+
+        self.particles[:, PF_YAW_OFFSET] += np.random.normal(0, 0.01, len(self.particles))
 
         rotated_delta_pos = [delta_pos[PF_X] * np.cos(self.particles[:,PF_YAW_OFFSET]) + -delta_pos[PF_Z] * np.sin(self.particles[:,PF_YAW_OFFSET]),
                              delta_pos[PF_X] * -np.sin(self.particles[:,PF_YAW_OFFSET]) + -delta_pos[PF_Z] * np.cos(self.particles[:,PF_YAW_OFFSET])]
@@ -265,7 +267,7 @@ class ParticleFilter:
         if tot_score > 0:
             w /= tot_score
         else:
-            print("!!! Total Particle Score is ZERO")
+            print("!!! Total Particles Score is ZERO")
         idx = np.random.choice(len(w), self.num_particles, p=w)
         new_particles = self.particles[idx]
         # old_scores = self.particles[idx, PF_SCORE]
@@ -321,36 +323,37 @@ def score_particle_yaw_to_sign(uv_pt1_list, uv_pt2, xy_pt1_list, xy_pt2, yaws, s
         yaw_diff = np.dot(sign_normal, np.array([cos(yaws[p]), sin(yaws[p])]))
         if yaw_diff > -0.2:
             yaw_score[p] = 0
-            break
 
-        theta_pred = atan2(xy_pt2[1] - xy_pt1_list[p,1], xy_pt2[0] - xy_pt1_list[p,0])
-        column_detection = int(sign_roi[0] + sign_roi[2]/2)
-        theta_d = yaws[p] + (180 - column_detection) * angle_per_pixel
-        x = abs(sin(theta_pred - theta_d))
-        # x = sin((theta_pred - theta_d)/2)
-        yaw_score[p] = 0.2/(0.2+x)
+        if yaw_score[p] > 0:
 
-        r1 = int(uv_pt1_list[p][1])
-        c1 = int(uv_pt1_list[p][0])
-        r2 = int(uv_pt2[1])
-        c2 = int(uv_pt2[0])
+            theta_pred = atan2(xy_pt2[1] - xy_pt1_list[p,1], xy_pt2[0] - xy_pt1_list[p,0])
+            column_detection = int(sign_roi[0] + sign_roi[2]/2)
+            theta_d = yaws[p] + (180 - column_detection) * angle_per_pixel
+            x = abs(sin(theta_pred - theta_d))
+            # x = sin((theta_pred - theta_d)/2)
+            yaw_score[p] += 0.2/(0.2+x)
 
-        dr = abs(r1 - r2)  # delta row
-        dc = abs(c1 - c2)  # delta column
+            r1 = int(uv_pt1_list[p][1])
+            c1 = int(uv_pt1_list[p][0])
+            r2 = int(uv_pt2[1])
+            c2 = int(uv_pt2[0])
 
-        span = max(dr, dc)  # if more rows than columns then loop over rows; else loop over columns
-        # span_float = span + 0.  # float version
-        if span == 0:  # i.e., special case: (r1,c1) equals (r2,c2)
-            multiplier = 0.
-        else:
-            multiplier = 1. / span
+            dr = abs(r1 - r2)  # delta row
+            dc = abs(c1 - c2)  # delta column
 
-        for k in range(span + 1):  # k goes from 0 through span; e.g., a span of 2 implies there are 2+1=3 pixels to reach in loop
-            frac = k * multiplier
-            r = trunc(r1 + frac * (r2 - r1))
-            c = trunc(c1 + frac * (c2 - c1))
-            if map[r, c] > 0:  # hit!
-                yaw_score[p] = 0
-                break
+            span = max(dr, dc)  # if more rows than columns then loop over rows; else loop over columns
+            # span_float = span + 0.  # float version
+            if span == 0:  # i.e., special case: (r1,c1) equals (r2,c2)
+                multiplier = 0.
+            else:
+                multiplier = 1. / span
+
+            for k in range(span + 1):  # k goes from 0 through span; e.g., a span of 2 implies there are 2+1=3 pixels to reach in loop
+                frac = k * multiplier
+                r = trunc(r1 + frac * (r2 - r1))
+                c = trunc(c1 + frac * (c2 - c1))
+                if map[r, c] > 0:  # hit!
+                    yaw_score[p] = 0
+                    break
 
     return yaw_score

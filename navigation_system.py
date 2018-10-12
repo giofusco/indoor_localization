@@ -147,7 +147,8 @@ class NavigationSystem:
         dist = np.linalg.norm(loc_max_1-loc_max_1)
         # print(dist)
         if verbose:
-            self.visualizer.visualize_heat_map(kde, loc_max_0, loc_max_1, self.frame_counter)
+            self.visualizer.visualize_heat_map(kde, loc_max_0, loc_max_1, None)
+            # self.visualizer.visualize_heat_map(kde, loc_max_0, loc_max_1, self.frame_counter)
 
 # @jit(nopython=True)
 # def find_peaks(M, peaks):

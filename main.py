@@ -17,8 +17,8 @@ import cv2
 from math import pi
 
 STEP_PAUSE = 1
-UNIFORM = 0
-NUM_PARTICLES = 10000
+UNIFORM = 1
+NUM_PARTICLES = 30000
 MARKER_DETECTOR_MIN_CONSEC_FRAMES = 5
 CHECK_WALL_CROSSING = 1
 
@@ -51,7 +51,7 @@ def main():
     visualizer = Visualizer(annotated_map.get_walls_image())
     # visualizer.plot_map_feature(annotated_map, 'exit_sign', None)
 
-    sign_detector = SignDetector(components_names.EXIT_DETECTOR, camera_horiz_dist_to_sign=2.)
+    sign_detector = SignDetector(components_names.EXIT_DETECTOR, camera_horiz_dist_to_sign=1.8)
     marker_detector = MarkerDetector(components_names.MARKER_DETECTOR, min_consecutive_frames=MARKER_DETECTOR_MIN_CONSEC_FRAMES)
     nav_system = NavigationSystem(data_source=data_parser, annotated_map=annotated_map,
                                   marker_detector=marker_detector, visualizer=visualizer )
