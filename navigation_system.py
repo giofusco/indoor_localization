@@ -55,12 +55,13 @@ class NavigationSystem:
         self.particle_filter = ParticleFilter(self.annotated_map, num_particles=num_particles, position_noise_maj=step_pos_noise_maj,
                                                 position_noise_min=step_pos_noise_min, yaw_noise=step_yaw_noise,
                                                 check_wall_crossing=check_wall_crossing, visualizer=self.visualizer)
-        self.detect_starting_position()
-        measured_pos, measured_yaw, VIO_yaw_offset = self.observers[cnames.ODOMETRY].get_initial_measurements()
-       
+
         if not uniform:
+            self.detect_starting_position()
+            measured_pos, measured_yaw, VIO_yaw_offset = self.observers[cnames.ODOMETRY].get_initial_measurements()
             self.particle_filter.initialize_particles_at(measured_pos, measured_yaw, VIO_yaw_offset, init_pos_noise, init_yaw_noise, fudge_max)
         else:
+            self.observers[cnames.ODOMETRY].initialize(self.data_source)
             self.particle_filter.initialize_particles_uniform(init_pos_noise, init_yaw_noise, fudge_max)
 
     def detect_starting_position(self):
@@ -93,12 +94,12 @@ class NavigationSystem:
             self.calculate_user_location()
 
 
-            self.position_trace.append(self.particle_filter.particles[0, 0:2] + [0., 0.])
-            self.position_file_handler.write(str(measured_VIO_yaw)+ ',' + str(VIO_pos[particle_filter.PF_X]) + ',' +
-                                             str(VIO_pos[particle_filter.PF_Z]) + ',' +
-                                             str(self.observers[cnames.ODOMETRY].starting_yaw - math.pi/2) + ',' +
-                                             str(self.observers[cnames.ODOMETRY].starting_position[0]) + ',' +
-                                             str(self.observers[cnames.ODOMETRY].starting_position[1]) + '\n')
+            # self.position_trace.append(self.particle_filter.particles[0, 0:2] + [0., 0.])
+            # self.position_file_handler.write(str(measured_VIO_yaw)+ ',' + str(VIO_pos[particle_filter.PF_X]) + ',' +
+            #                                  str(VIO_pos[particle_filter.PF_Z]) + ',' +
+            #                                  str(self.observers[cnames.ODOMETRY].starting_yaw - math.pi/2) + ',' +
+            #                                  str(self.observers[cnames.ODOMETRY].starting_position[0]) + ',' +
+            #                                  str(self.observers[cnames.ODOMETRY].starting_position[1]) + '\n')
 
             # self.position_file_handler.write(str(self.particle_filter.particles[0][particle_filter.PF_X])+ "\t"+ str(self.particle_filter.particles[0][particle_filter.PF_Z])+"\n")
             # self.position_file_handler.write(str(measured_pos_delta[particle_filter.PF_X]) + "\t" + str(

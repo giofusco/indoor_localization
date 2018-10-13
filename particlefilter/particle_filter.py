@@ -317,12 +317,12 @@ def score_particle_yaw_to_sign(uv_pt1_list, uv_pt2, xy_pt1_list, xy_pt2, yaws, s
     Return 1 if a wall is hit, 0 otherwise."""
 
     for p in range(0, len(uv_pt1_list)):
-        yaw_score[p] = 0
+        yaw_score[p] = 0.1
 
         # check particle yaw compatible with sign orientation
         yaw_diff = np.dot(sign_normal, np.array([cos(yaws[p]), sin(yaws[p])]))
         if yaw_diff > -0.2:
-            yaw_score[p] = 0
+            yaw_score[p] = 0.1
 
         if yaw_score[p] > 0:
 
@@ -330,7 +330,6 @@ def score_particle_yaw_to_sign(uv_pt1_list, uv_pt2, xy_pt1_list, xy_pt2, yaws, s
             column_detection = int(sign_roi[0] + sign_roi[2]/2)
             theta_d = yaws[p] + (180 - column_detection) * angle_per_pixel
             x = abs(sin(theta_pred - theta_d))
-            # x = sin((theta_pred - theta_d)/2)
             yaw_score[p] += 0.2/(0.2+x)
 
             r1 = int(uv_pt1_list[p][1])
@@ -353,7 +352,7 @@ def score_particle_yaw_to_sign(uv_pt1_list, uv_pt2, xy_pt1_list, xy_pt2, yaws, s
                 r = trunc(r1 + frac * (r2 - r1))
                 c = trunc(c1 + frac * (c2 - c1))
                 if map[r, c] > 0:  # hit!
-                    yaw_score[p] = 0
+                    yaw_score[p] = 0.1
                     break
 
     return yaw_score

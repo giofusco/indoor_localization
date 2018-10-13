@@ -58,7 +58,8 @@ class Visualizer:
 
     # @staticmethod
     def show_frame(self, image):
-        cv2.imshow("input", image)
+        if image is not None:
+            cv2.imshow("input", image)
         # cv2.waitKey(1)
 
     # @staticmethod

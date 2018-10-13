@@ -8,7 +8,7 @@ import cv2
 class DataParser:
 
     VIO_FILE_REGEXP = '/VIO*.txt'
-    BLOCK_LEN = 6
+    BLOCK_LEN = 5 # use 6 for version with barometer
 
     def __init__(self, data_folder, image_format='jpg'):
         self.folder = data_folder
@@ -40,6 +40,7 @@ class DataParser:
             if len(lines[0]) > 0:
                 data = self._parse(lines)
                 data[dc.FOLDER] = self.folder
+                data[dc.IMAGE] = None
                 if load_image:
                     img = cv2.imread(data[dc.IMAGE_FILENAME])
                     img = cv2.resize(img, (360, 640), img)
@@ -64,5 +65,7 @@ class DataParser:
                                  float(lines[3].split(',')[2][0:-1])]
         data[dc.CAMERA_ROTATION] = [float(lines[4][7:].split(',')[0]), float(lines[4][7:].split(',')[1]),
                                  float(lines[4][7:].split(',')[2][0:-2])]
-        data[dc.IMAGE_FILENAME] =  os.path.join(self.folder, lines[0][0:-1] + "." + self.image_format)
+        data[dc.IMAGE_FILENAME] = os.path.join(self.folder, lines[0][0:-1] + "." + self.image_format)
+        if self.BLOCK_LEN > 5:
+            data[dc.BAROMETER] = float(lines[5])
         return data

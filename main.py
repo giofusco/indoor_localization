@@ -31,7 +31,7 @@ STEP_YAW_NOISE = 0.5
 FUDGE_MAX = 1.0
 
 # 99S undershooting
-data_folder = './data/137'
+data_folder = './data/P2_5'
 map_featsfile = './res/mapFeatures.yml'
 map_image = './res/Walls.png'
 walkable_image = './res/Walkable.png'
@@ -47,7 +47,7 @@ def main():
     # reads data from VIO files
     data_parser = DataParser(data_folder)
 
-    annotated_map = AnnotatedMap(map_image, walkable_image, map_featsfile, scale=292./12.45)
+    annotated_map = AnnotatedMap(map_image, walkable_image, map_featsfile, scale=(292./2)/12.45)#scale=292./12.45)
     visualizer = Visualizer(annotated_map.get_walls_image())
     # visualizer.plot_map_feature(annotated_map, 'exit_sign', None)
 

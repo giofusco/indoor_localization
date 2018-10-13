@@ -31,13 +31,30 @@ class Odometry:
         # deltas for particles update
         self.delta_VIO_yaw = None
         self.delta_VIO_position = None
-        self.current_abs_yaw = None
         self.initial_VIO_position = None
         self.previous_time_stamp = 0
         self.tracker_status = None
 
         # difference between known initial absolute yaw (given by marker for now)
         self.yaw_offset = 0
+
+    def initialize(self, data_source):
+        found = False
+        while not found:
+            current_data = data_source.read_next(load_image=True)
+            if not current_data == {}:
+                if current_data[dconst.VIO_STATUS] == 'normal':
+                    found = True
+                    self.last_processed_timestamp = current_data[dconst.TIMESTAMP]
+                    self.starting_position = None
+                    self.starting_yaw = None
+                    self.current_position = None
+                    self.current_VIO_position = np.array([current_data[dconst.CAMERA_POSITION][0],
+                                                          current_data[dconst.CAMERA_POSITION][2]])
+                    self.current_VIO_yaw = current_data[dconst.CAMERA_ROTATION][1]
+                    self.VIO_yaw_offset = current_data[dconst.CAMERA_ROTATION][1]
+                    self.initial_VIO_position = self.current_VIO_position
+
 
     def set_initial_position(self, data_source, marker_detector=None, trigger_marker_id='55', verbose=False):
         if marker_detector is not None:
@@ -85,7 +102,6 @@ class Odometry:
                                                                  current_data[dconst.CAMERA_POSITION][2]])
                                     self.current_VIO_yaw = current_data[dconst.CAMERA_ROTATION][1]
                                     self.VIO_yaw_offset = current_data[dconst.CAMERA_ROTATION][1] - yaw_marker
-                                    self.current_abs_yaw = yaw_marker
                                     self.initial_VIO_position = self.current_VIO_position
 
                             elif found is True:
@@ -121,7 +137,6 @@ class Odometry:
         self.current_VIO_position = np.array([vio_data[dconst.CAMERA_POSITION][0], vio_data[dconst.CAMERA_POSITION][2]])
         self.delta_VIO_yaw = self.current_VIO_yaw - self.previous_VIO_yaw
         self.delta_VIO_position = self.current_VIO_position - self.previous_VIO_position
-        self.current_abs_yaw += self.delta_VIO_yaw
         self.previous_time_stamp = self.last_processed_timestamp
         self.last_processed_timestamp = vio_data[dconst.TIMESTAMP]
         self.tracker_status = vio_data[dconst.VIO_STATUS]
