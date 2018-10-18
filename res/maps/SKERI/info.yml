@@ -1,0 +1,13 @@
+building_name: SKERI
+floor:
+    id: 4
+    features_file: mapFeatures_4.yml
+    walls: walls_4.png
+    walkable: walkable_4.png
+    scale: 11.73
+floor:
+    id: 3
+    features_file: mapFeatures_3.yml
+    walls: walls_3.png
+    walkable: walkable_3.png
+    scale: 11.73
