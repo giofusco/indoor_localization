@@ -31,6 +31,7 @@ class FloorChangeDetector:
             hPa = data[dc.BAROMETER] * 10
 
             num_stories = 0.0
+            deltaP = 0
 
             if self.reset:
                 self.p_Ref = hPa
@@ -41,16 +42,18 @@ class FloorChangeDetector:
             else:
                 deltaP = (hPa - self.p_Ref)
 
-            local_delta = abs(hPa - self.prev_value)
+                local_delta = 0
+                if self.prev_value is not None:
+                    local_delta = abs(hPa - self.prev_value)
 
-            if abs(deltaP) > self.hPa_threshold:
-                if local_delta < self.min_delta_val:
-                    self.reset = True
-                    num_stories = -(deltaP / abs(deltaP)) * floor(abs(deltaP) / self.hPa_threshold)
-                    self.current_floor_number += num_stories
+                if abs(deltaP) > self.hPa_threshold:
+                    if local_delta < self.min_delta_val:
+                        self.reset = True
+                        num_stories = -(deltaP / abs(deltaP)) * floor(abs(deltaP) / self.hPa_threshold)
+                        self.current_floor_number += num_stories
 
-            self.prev_value = hPa
+                self.prev_value = hPa
 
-            return int(self.current_floor_number, num_stories)
+            return (self.current_floor_number, num_stories)
         else:
             raise RuntimeError("ERROR: No Barometer values available. Ending navigation system.")

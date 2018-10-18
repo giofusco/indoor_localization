@@ -7,7 +7,9 @@ from particlefilter.odometry import Odometry
 from navigation_system import NavigationSystem
 from detectors.marker_detector import MarkerDetector
 from detectors.sign_detector import SignDetector
+from detectors.floor_change_detector import FloorChangeDetector
 from plotting.visualizer import Visualizer
+from map.map_manager import  MapManager
 # from EnvironmentMap.MapAnnotation import MapAnnotation
 # from sign_detector import SignDetector
 
@@ -29,9 +31,11 @@ STEP_POS_NOISE_MAJ = 1.5
 STEP_POS_NOISE_MIN = 1.1
 STEP_YAW_NOISE = 0.5
 FUDGE_MAX = 1.0
+INIT_FLOOR = 3
 
 # 99S undershooting
-data_folder = './data/P2_5'
+data_folder = './data/barometer/B6'
+map_folder = './res/maps/SKERI'
 map_featsfile = './res/mapFeatures.yml'
 map_image = './res/Walls.png'
 walkable_image = './res/Walkable.png'
@@ -47,16 +51,20 @@ def main():
     # reads data from VIO files
     data_parser = DataParser(data_folder)
 
-    annotated_map = AnnotatedMap(map_image, walkable_image, map_featsfile, scale=(292./2)/12.45)#scale=292./12.45)
-    visualizer = Visualizer(annotated_map.get_walls_image())
+    map_manager = MapManager(map_folder, INIT_FLOOR)
+
+    # annotated_map = AnnotatedMap(map_image, walkable_image, map_featsfile, scale=(292./2)/12.45)#scale=292./12.45)
+    visualizer = Visualizer(map_manager.get_walls_image())
     # visualizer.plot_map_feature(annotated_map, 'exit_sign', None)
 
     sign_detector = SignDetector(components_names.EXIT_DETECTOR, camera_horiz_dist_to_sign=1.8)
     marker_detector = MarkerDetector(components_names.MARKER_DETECTOR, min_consecutive_frames=MARKER_DETECTOR_MIN_CONSEC_FRAMES)
-    nav_system = NavigationSystem(data_source=data_parser, annotated_map=annotated_map,
-                                  marker_detector=marker_detector, visualizer=visualizer )
+    floor_change_detector = FloorChangeDetector(starting_floor_number=INIT_FLOOR)
+    nav_system = NavigationSystem(data_source=data_parser, map_manager=map_manager,
+                                  marker_detector=marker_detector, floor_change_detector=floor_change_detector,
+                                  visualizer=visualizer )
 
-    odometry = Odometry(components_names.ODOMETRY, annotated_map)
+    odometry = Odometry(components_names.ODOMETRY, map_manager)
     nav_system.attach(components_names.ODOMETRY, odometry)
     nav_system.attach(components_names.MARKER_DETECTOR, marker_detector)
     nav_system.attach(components_names.EXIT_DETECTOR, sign_detector)

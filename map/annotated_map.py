@@ -16,18 +16,6 @@ class AnnotatedMap:
             self.normal = normal
             self.normal_angle = None
 
-        # set the range of particles yaw compatible with the sign orientation in the map
-        def set_FOV_range(self):
-            if len(self.normal) == 2:
-                if (self.normal == [0, 1]).all():
-                    self.normal_angle = 180*math.pi/180
-                elif (self.normal == [1, 0]).all():
-                    self.normal_angle = 90*math.pi/180
-                elif (self.normal == [-1, 0]).all():
-                    self.normal_angle = 270*math.pi/180
-                else:
-                    self.normal_angle = 0
-
     #default scale value [33.56 / 1.4859] is for SKERI building
     def __init__(self, walls_image_file, walkable_image_file, map_landmarks_file, scale=33.56 / 1.4859):
         self.tag = "AnnotatedMap"
@@ -107,8 +95,8 @@ class AnnotatedMap:
                             rot = np.fromstring(rot[1:-1], dtype=np.float, sep=', ').reshape((3, 3))
                             normal = np.fromstring(normal[1:-1], dtype=np.float, sep=', ')
                             newmapfeat = self.MapLandmark(name, idnumber, pos, rot, normal)
-                            if idnumber == 'exit_sign':
-                                newmapfeat.set_FOV_range()
+                            # if idnumber == 'exit_sign':
+                            #     newmapfeat.set_FOV_range()
                             # map_landmark_dict[idnumber].append(newmapfeat)
                             map_landmark_dict[idnumber.split()[len(idnumber.split()) - 1]].append(newmapfeat)
                         else:

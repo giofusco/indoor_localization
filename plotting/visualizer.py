@@ -70,13 +70,13 @@ class Visualizer:
 
         # cv2.waitKey(1)
 
-    def plot_particles(self, annotated_map, particles):
-        draw_map = self.draw_map.copy()
+    def plot_particles(self, map_manager, particles):
+        draw_map = map_manager.get_color_map_image()
         valid_particles = particles[particles[:,3]>=0]
         score_colors = self.jets(valid_particles[:,3])*255
-        pts = annotated_map.uv2pixels_vectorized(valid_particles[:,0:2])
+        pts = map_manager.uv2pixels_vectorized(valid_particles[:,0:2])
         yaw_uv = valid_particles[:,0:2] + np.asarray( (np.cos(valid_particles[:,2]), np.sin(valid_particles[:,2]) ), dtype=np.float64 ).transpose()
-        yaw_pts = annotated_map.uv2pixels_vectorized(yaw_uv)
+        yaw_pts = map_manager.uv2pixels_vectorized(yaw_uv)
 
         for p in range(len(valid_particles)):
 
@@ -92,26 +92,26 @@ class Visualizer:
         cv2.imshow("Particles", draw_map)
         # cv2.waitKey(-1)
 
-    def draw_points(self, annotated_map, points, size=3, color=(0, 0, 255), title="Points"):
-        draw_map = self.draw_map.copy()
+    def draw_points(self, map_manager, points, size=3, color=(0, 0, 255), title="Points"):
+        draw_map = map_manager.get_color_map_image.copy()
 
         for p in range(len(points)):
             cv2.circle(draw_map, tuple(points[p][0:2]), int(size), color)
         cv2.imshow(title, draw_map)
 
-    def plot_points(self, annotated_map, points, size=3, color=(0, 0, 255), title="Points"):
-        draw_map = self.draw_map.copy()
+    def plot_points(self, map_manager, points, size=3, color=(0, 0, 255), title="Points"):
+        draw_map = map_manager.get_color_map_image.copy()
 
         for p in range(len(points)):
-            cv2.circle(draw_map, tuple(annotated_map.xy2uv(points[p][0:2])), int(size), color)
+            cv2.circle(draw_map, tuple(map_manager.xy2uv(points[p][0:2])), int(size), color)
         cv2.imshow(title, draw_map)
         # cv2.waitKey(1)
 
     # @staticmethod
-    def _plot_point(self, uv, color=(0, 0, 255)):
-        draw_map = self.draw_map.copy()
-        draw_map = cv2.circle(draw_map, tuple(uv), 5, color, -1)
-        return draw_map
+    # def _plot_point(self, uv, color=(0, 0, 255)):
+    #     draw_map = self.draw_map.copy()
+    #     draw_map = cv2.circle(draw_map, tuple(uv), 5, color, -1)
+    #     return draw_map
 
     def get_color_from_float(self, value):
         jet = self.jets(value)
@@ -122,7 +122,7 @@ class Visualizer:
         return color
 
 
-    def visualize_heat_map(self, kde_map, loc=None, loc2=None, frame_num = None, avg = False):
+    def visualize_heat_map(self, map_manager, kde_map, loc=None, loc2=None, frame_num = None, avg = False):
 
         # VIO_Theta, VIO_X, VIO_Z, Marker_Theta, MARKER_X, MARKER_Z
         min_val, max_val, a, b = cv2.minMaxLoc(kde_map)
@@ -140,7 +140,7 @@ class Visualizer:
             if loc2 is not None:
                 adjMap = cv2.circle(adjMap,tuple(loc2),3, (0,128,128), 4)
 
-        cv2.imshow("KDE", self.draw_map + adjMap)
+        cv2.imshow("KDE", map_manager.get_color_map_image() + adjMap)
         if frame_num is not None:
             cv2.imwrite("kde_" + str(frame_num)+'.jpg', self.draw_map + adjMap)
 

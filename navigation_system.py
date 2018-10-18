@@ -14,12 +14,12 @@ from numba import jit
 
 class NavigationSystem:
 
-    def __init__(self, annotated_map, data_source, marker_detector, visualizer=None):
+    def __init__(self, map_manager, data_source, marker_detector, floor_change_detector, visualizer=None):
         self.data_source = data_source
         self.current_data = None
         self.observers = {}
-        self.annotated_map = annotated_map
-        self.map_image = annotated_map.get_walls_image()
+        self.map_manager = map_manager
+        self.map_image = map_manager.get_walls_image()
         self.debug_images = {}
         self.last_tvec = None
         self.last_position = None
@@ -30,6 +30,7 @@ class NavigationSystem:
         self.position_trace = []
         self.markers_trace = []
         self.marker_detector = marker_detector
+        self.floor_change_detector = floor_change_detector
         self.particle_filter = None
         self.visualizer = visualizer
         self.initial_position_set = False
@@ -52,7 +53,7 @@ class NavigationSystem:
     def initialize(self, num_particles=1000, init_pos_noise=0.1, step_pos_noise_maj=0.1, step_pos_noise_min=0.1, init_yaw_noise=0.1, 
                     step_yaw_noise=0.1, fudge_max = 1., check_wall_crossing=True, uniform=True):
 
-        self.particle_filter = ParticleFilter(self.annotated_map, num_particles=num_particles, position_noise_maj=step_pos_noise_maj,
+        self.particle_filter = ParticleFilter(self.map_manager, num_particles=num_particles, position_noise_maj=step_pos_noise_maj,
                                                 position_noise_min=step_pos_noise_min, yaw_noise=step_yaw_noise,
                                                 check_wall_crossing=check_wall_crossing, visualizer=self.visualizer)
 
@@ -76,17 +77,24 @@ class NavigationSystem:
 
         if not self.current_data == {}:
             self.frame_counter += 1
+
             # notify all observers that new data are available and update accordingly
             for name, observer in self.observers.items():
                 observer.update(self.current_data)
             VIO_pos, measured_VIO_yaw, measured_pos_delta, yaw_delta, tracker_status = self.observers[cnames.ODOMETRY].get_measurements_and_deltas()
-            observed_pos_marker, observed_yaw_marker = self.observers[cnames.MARKER_DETECTOR].get_observations(annotated_map=self.annotated_map)
+            observed_pos_marker, observed_yaw_marker = self.observers[cnames.MARKER_DETECTOR].get_observations(map_manager=self.map_manager)
             observed_sign_distance, observed_sign_roi = self.observers[cnames.EXIT_DETECTOR].get_sign_info()
 
             # measured_pos, measured_yaw = self.observers[cnames.ODOMETRY].get_measurements()
 
             self.visualizer.show_frame(self.current_data[dconst.IMAGE])
 
+            # check if we are changing floor
+            current_floor_number, num_stories = self.floor_change_detector.update(self.current_data)
+            print (num_stories)
+            if num_stories != 0:
+                self.map_manager.set_current_floor(int(current_floor_number))
+                self.particle_filter.update_floor_info()
             self.particle_filter.step(measurements=[VIO_pos, measured_VIO_yaw, measured_pos_delta, yaw_delta, tracker_status],
                                       observations=[observed_pos_marker, observed_yaw_marker, observed_sign_distance,
                                                     observed_sign_roi])
@@ -127,12 +135,12 @@ class NavigationSystem:
     def finish(self):
         self.position_file_handler.close()
         self.visualizer.close_all_windows()
-        self.visualizer.plot_trace(self.data_source, self.annotated_map, self.position_trace)
+        # self.visualizer.plot_trace(self.data_source, self.annotated_map, self.position_trace)
 
     def calculate_user_location(self, verbose = True):
-        uv_pix = self.annotated_map.uv2pixels_vectorized(self.particle_filter.particles[:, 0:2])
+        uv_pix = self.map_manager.uv2pixels_vectorized(self.particle_filter.particles[:, 0:2])
         values = prepare_heat_map(uv_pix.astype(np.int32), self.particle_filter.particles[:, particle_filter.PF_SCORE],
-                                  self.annotated_map.get_walls_image().shape)
+                                  self.map_manager.get_walls_image().shape)
 
         kde = cv2.GaussianBlur(values, (11, 11), 35.)
         idx_sort = np.argsort(kde, axis=1)
@@ -148,7 +156,7 @@ class NavigationSystem:
         dist = np.linalg.norm(loc_max_1-loc_max_1)
         # print(dist)
         if verbose:
-            self.visualizer.visualize_heat_map(kde, loc_max_0, loc_max_1, None)
+            self.visualizer.visualize_heat_map(self.map_manager, kde, loc_max_0, loc_max_1, None)
             # self.visualizer.visualize_heat_map(kde, loc_max_0, loc_max_1, self.frame_counter)
 
 # @jit(nopython=True)

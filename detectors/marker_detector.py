@@ -45,12 +45,12 @@ class MarkerDetector:
     def set_marker_size(self, size_m):
         self.marker_length_m = size_m
 
-    def get_observations(self, annotated_map):
+    def get_observations(self, map_manager):
         marker_id = self.best_detection_id
         if marker_id is not None:
             tvec = self.detections[marker_id]['tvec']
             rvec = self.detections[marker_id]['rvec']
-            if marker_id in annotated_map.map_landmarks_dict and tvec[2] <= self.max_marker_distance_meter:
+            if marker_id in map_manager.get_map_landmarks_dict and tvec[2] <= self.max_marker_distance_meter:
                 marker_position_XY, yaw_marker = \
                     MarkerDetector.compute_XY_position_on_marker_detection(marker_id, tvec, rvec, annotated_map)
                 return marker_position_XY, yaw_marker

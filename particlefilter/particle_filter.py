@@ -28,7 +28,7 @@ class ParticleFilter:
     def __init__(self, config_file):
         self.num_particles = None
         self.particles = []
-        self.annotated_map = None
+        # self.annotated_map = None
         self.walls_image = self.annotated_map.get_walls_image()
         self.walkable_mask = self.annotated_map.get_walkable_mask()
         self.vis = None
@@ -40,12 +40,12 @@ class ParticleFilter:
         self.check_wall_crossing = None
         raise NotImplementedError
 
-    def __init__(self, annotated_map, num_particles=1000, position_noise_maj=1.2, position_noise_min=0.2, yaw_noise=0.01, check_wall_crossing=True, visualizer=None):
+    def __init__(self, map_manager, num_particles=1000, position_noise_maj=1.2, position_noise_min=0.2, yaw_noise=0.01, check_wall_crossing=True, visualizer=None):
         self.num_particles = num_particles
         self.particles = []
-        self.annotated_map = annotated_map
-        self.walls_image = self.annotated_map.get_walls_image()
-        self.walkable_mask = self.annotated_map.get_walkable_mask()
+        self.map_manager = map_manager
+        self.walls_image = self.map_manager.get_walls_image()
+        self.walkable_mask = self.map_manager.get_walkable_mask()
         self.vis = visualizer
         self.yaw_offset = None
         self.tot_motion = 0.
@@ -53,6 +53,12 @@ class ParticleFilter:
         self.position_noise_min = position_noise_min
         self.yaw_noise = yaw_noise
         self.check_wall_crossing = check_wall_crossing
+
+    def update_floor_info(self):
+        self.walls_image = self.map_manager.get_walls_image()
+        self.walkable_mask = self.map_manager.get_walkable_mask()
+
+        #spawn particles in the right places?
 
     def initialize_particles_at(self, pos, global_yaw, yaw_offset, position_noise_sigma, yaw_noise_sigma, fudge_max=1.):
         #initialize N random particles all over the walkable area
@@ -138,8 +144,8 @@ class ParticleFilter:
         num_samples = self.num_particles
 
         while n_valid_particles < self.num_particles:
-            sample_x = np.random.uniform(0., self.annotated_map.mapsize_xy[1], num_samples)
-            sample_z = np.random.uniform(0., self.annotated_map.mapsize_xy[0], num_samples)
+            sample_x = np.random.uniform(0., self.map_manager.map_size_xy(1), num_samples)
+            sample_z = np.random.uniform(0., self.map_manager.map_size_xy(0), num_samples)
 
             sample_x, sample_z, num_valid = self.remove_non_walkable_locations(sample_x, sample_z)
             n_valid_particles += num_valid
@@ -159,7 +165,7 @@ class ParticleFilter:
                     (self.particles, np.column_stack((sample_x, sample_z, yaws, weights, yaw_offset,
                                                       np.random.uniform(1, fudge_max, num_valid)))),
                     axis=0)
-        self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
+        self.vis.plot_particles(map_manager=self.map_manager, particles=self.particles)
 
     def step(self, measurements, observations):
         # print(" >>> Number of particles: ", len(self.particles))
@@ -167,11 +173,11 @@ class ParticleFilter:
                                self.check_wall_crossing)
         if observations[2] is not None:
             self.score_particles(observations)
-            self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
+            self.vis.plot_particles(map_manager=self.map_manager, particles=self.particles)
             self.resample_particles()
             self.tot_motion = 0.
         else:
-            self.vis.plot_particles(annotated_map=self.annotated_map, particles=self.particles)
+            self.vis.plot_particles(map_manager=self.map_manager, particles=self.particles)
 
         self.tot_motion += np.linalg.norm(measurements[PF_DELTA_POS], ord=2)
         if self.tot_motion >= 1.5 or len(self.particles)/self.num_particles < 0.25:
@@ -180,7 +186,7 @@ class ParticleFilter:
 
     def remove_non_walkable_locations(self, x_vector, z_vector):
         tmp_pos = np.column_stack((x_vector, z_vector))
-        tmp_pt = self.annotated_map.uv2pixels_vectorized(tmp_pos)
+        tmp_pt = self.map_manager.uv2pixels_vectorized(tmp_pos)
 
         idx = [self.walkable_mask[np.array(tmp_pt[:, PF_V]), np.array(tmp_pt[:, PF_U])] > 0]
         sample_x = x_vector[idx]
@@ -191,7 +197,7 @@ class ParticleFilter:
         return sample_x, sample_z, num_valid
 
     def move_particles_by(self, delta_pos, vio_yaw_delta, tracker_status, check_wall_crossing=True):
-        start_pt = (self.annotated_map.uv2pixels_vectorized(self.particles[:, PF_X:PF_YAW]))
+        start_pt = (self.map_manager.uv2pixels_vectorized(self.particles[:, PF_X:PF_YAW]))
 
         self.particles[:, PF_YAW_OFFSET] += np.random.normal(0, 0.01, len(self.particles))
 
@@ -211,7 +217,7 @@ class ParticleFilter:
         x = self.particles[:, PF_X] + rotated_delta_pos[PF_X] + noise[PF_X]
         z = self.particles[:, PF_Z] + rotated_delta_pos[PF_Z] + noise[PF_Z]
 
-        dest_pt = self.annotated_map.uv2pixels_vectorized(np.column_stack((x, z)))
+        dest_pt = self.map_manager.uv2pixels_vectorized(np.column_stack((x, z)))
 
         if check_wall_crossing:
             self.particles = set_wall_hit_score(self.particles, start_pt, dest_pt, self.walls_image)
@@ -229,11 +235,11 @@ class ParticleFilter:
         if observations[2] is not None:
             app = camera_info.get_camera_angle_per_pixel()
             # print("APP:", app)
-            start_pt = self.annotated_map.uv2pixels_vectorized(self.particles[:, PF_X:PF_YAW])
+            start_pt = self.map_manager.uv2pixels_vectorized(self.particles[:, PF_X:PF_YAW])
             cnt = 0
-            yaw_score = np.zeros((len(self.particles), len(self.annotated_map.map_landmarks_dict['exit_sign'])), dtype=np.float64)
-            for s in self.annotated_map.map_landmarks_dict['exit_sign']:
-                end_pt = self.annotated_map.uv2pixels(s.position)
+            yaw_score = np.zeros((len(self.particles), len(self.map_manager.get_map_landmarks('exit_sign'))), dtype=np.float64)
+            for s in self.map_manager.get_map_landmarks('exit_sign'):
+                end_pt = self.map_manager.uv2pixels(s.position)
                 ys = np.zeros(len(self.particles), dtype=np.float64)
                 # yaw_score[:, cnt]\
 
